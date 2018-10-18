@@ -3,6 +3,9 @@ import re
 
 
 FB_REACTIONS = [fb_type.lower() for fb_type in ["LIKE", "LOVE", "WOW", "HAHA", "SAD", "ANGRY"]]
+CONFESSION_ID_INDEX = 0
+CONFESSION_TEXT_INDEX = 1
+CONFESSION_REACTION_INDEX = 2
 
 
 def load_json_data(name: str) -> list:
@@ -38,4 +41,4 @@ def extract_text_and_labels(feed: list) -> list:
 if __name__ == '__main__':
 	mit_confessions = load_json_data("mit_confessions_feed_array")
 	data = extract_text_and_labels(mit_confessions)
-	texts = [item[2] for item in data]
+	texts = [item[TEXT_INDEX] for item in data]
