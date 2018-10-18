@@ -1,3 +1,8 @@
+"""
+This was used to convert summer confessions from csv to json because
+json is much easier to work with and key.
+"""
+
 import csv
 import re
 import json
