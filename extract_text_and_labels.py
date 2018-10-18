@@ -37,4 +37,5 @@ def extract_text_and_labels(feed: list) -> list:
 # example
 if __name__ == '__main__':
 	mit_confessions = load_json_data("mit_confessions_feed_array")
-	print(extract_text_and_labels(mit_confessions))
+	data = extract_text_and_labels(mit_confessions)
+	texts = [item[2] for item in data]
