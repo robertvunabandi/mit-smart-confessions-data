@@ -1,10 +1,6 @@
 # MIT Smart Confessions API
 
-### Installation
-
-    pip3 install -r requirements.txt
-
-### Notes on Virtualenv and Facebook-SDK
+## Installation
 
 To create the virtualenv dev location (don't do this 
 again because it's done in this repo):
@@ -18,6 +14,7 @@ To activate, run:
 To install the tool to use FB API (don't do this 
 again because it's done in this repo):
 	
+	pip3 install -r requirements.txt
 	pip3 install facebook-sdk
 
 To deactivate, run:
