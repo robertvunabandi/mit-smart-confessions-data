@@ -619,12 +619,12 @@ def store_data_with_comments(name: str, date_to_labelled_posts: dict, dates: lis
 	store_post_data(name, date_to_labelled_posts, dates, suffix="with_comments")
 
 
-should_collect_data = False
+should_collect_data = True
 if __name__ == '__main__':
-	_page_title = "mit_africans_test"
-	_page_id = config.MIT_AFRICANS_ID
-	_access_token = config.MIT_AFRICANS_ACCESS_TOKEN
-	_start_date = config.MIT_AFRICANS_CREATION_DATE
+	_page_title = "mit_summer_confessions"
+	_page_id = config.MIT_SUMMER_CONFESSIONS_ID
+	_access_token = config.MIT_SUMMER_CONFESSIONS_ACCESS_TOKEN
+	_start_date = config.MIT_SUMMER_CONFESSIONS_CREATION_DATE
 	if should_collect_data:
 		collect_page_data(
 			_page_title,
