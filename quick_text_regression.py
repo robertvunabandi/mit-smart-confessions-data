@@ -309,7 +309,7 @@ def run_mit_confessions():
 	history = model.fit(
 		train_data,
 		train_labels,
-		epochs=100,
+		epochs=200,
 		batch_size=64,
 		validation_data=(val_data, val_labels),
 		verbose=1
@@ -317,10 +317,9 @@ def run_mit_confessions():
 	results = model.evaluate(test_data, test_labels)
 	print(results)
 	plot_history(history, is_classification)
-
-
-# plot_prediction(model, test_data, test_labels, "testing")
-# plot_prediction(model, train_data, train_labels, "training")
+	if not is_classification:
+		plot_prediction(model, test_data, test_labels, "testing")
+		plot_prediction(model, train_data, train_labels, "training")
 
 
 """
@@ -335,7 +334,10 @@ def plot_history(history, is_classification: bool = False):
 	if is_classification:
 		# print(dir(history.history))
 		plt.plot(
-			history.epoch, np.array(history.history['acc']), label='Accuracy'
+			history.epoch, np.array(history.history['acc']), label='Training Accuracy'
+		)
+		plt.plot(
+			history.epoch, np.array(history.history['val_acc']), label='Validation Accuracy'
 		)
 	else:
 		plt.plot(
