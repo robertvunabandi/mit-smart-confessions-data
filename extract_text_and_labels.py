@@ -50,4 +50,4 @@ def extract_text_and_labels(feed: list) -> list:
 if __name__ == '__main__':
 	mit_confessions = load_json_data("mit_confessions_feed_array")
 	data = extract_text_and_labels(mit_confessions)
-	texts = [item[TEXT_INDEX] for item in data]
+	texts = [item[CONFESSION_TEXT_INDEX] for item in data]
