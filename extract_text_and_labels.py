@@ -1,11 +1,20 @@
 import json
 import re
-
+from enum import Enum
 
 FB_REACTIONS = [fb_type.lower() for fb_type in ["LIKE", "LOVE", "WOW", "HAHA", "SAD", "ANGRY"]]
 CONFESSION_ID_INDEX = 0
 CONFESSION_TEXT_INDEX = 1
 CONFESSION_REACTION_INDEX = 2
+
+class FBReactions(Enum):
+	LIKE = 0
+	LOVE = 1
+	WOW = 2
+	HAHA = 3
+	SAD = 4
+	ANGRY = 5
+	COMMENTS = 6
 
 
 def load_json_data(name: str) -> list:
