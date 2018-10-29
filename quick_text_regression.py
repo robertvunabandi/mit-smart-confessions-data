@@ -267,15 +267,16 @@ def create_model(number_of_words: int, input_length: int) -> Model:
 	model.add(layers.Dropout(0.25))
 	model.add(layers.Dense(64, activation="relu"))
 	# model.add(layers.Dropout(0.1))
-	model.add(layers.Dense(1, activation="linear"))
-	# model.compile(optimizer=optimizers.Adam(), loss='binary_crossentropy', metrics=['accuracy'])
-	model.compile(optimizer="adam", loss="mse", metrics=["mae"])
+	model.add(layers.Dense(1, activation="sigmoid"))
+	model.compile(optimizer=optimizers.Adam(), loss='binary_crossentropy', metrics=['accuracy'])
+	# model.compile(optimizer="adam", loss="mse", metrics=["mae"])
 	model.summary()
 	return model
 
 
 """
 Running the Methods
+(x - avg) = y * std
 """
 
 
@@ -291,9 +292,12 @@ def run_mit_confessions():
 	)
 	train_data, train_labels, test_data, test_labels, val_data, val_labels, max_sequence_length = \
 		get_train_and_test_data(sequences, standard_like_labels, word_to_index)
-	# for t in [train_labels, test_labels, val_labels]:
-	# 	t[t <= 20] = 0
-	# 	t[t > 20] = 1
+	is_classification = True
+	if is_classification:
+		value_at_20 = (20 - avg) / std
+		for t in [train_labels, test_labels, val_labels]:
+			t[t >= value_at_20] = 1
+			t[t < value_at_20] = 0
 	print(tokenizer.num_words)
 	print(train_data.shape)
 	print(train_labels.shape)
@@ -305,16 +309,18 @@ def run_mit_confessions():
 	history = model.fit(
 		train_data,
 		train_labels,
-		epochs=250,
+		epochs=100,
 		batch_size=64,
 		validation_data=(val_data, val_labels),
 		verbose=1
 	)
 	results = model.evaluate(test_data, test_labels)
 	print(results)
-	plot_history(history)
-	plot_prediction(model, test_data, test_labels, "testing")
-	plot_prediction(model, train_data, train_labels, "training")
+	plot_history(history, is_classification)
+
+
+# plot_prediction(model, test_data, test_labels, "testing")
+# plot_prediction(model, train_data, train_labels, "training")
 
 
 """
@@ -322,24 +328,30 @@ Plotting
 """
 
 
-def plot_history(history):
+def plot_history(history, is_classification: bool = False):
 	plt.figure()
 	plt.xlabel('Epoch')
 	plt.ylabel('Mean Abs Error [1000$]')
-	plt.plot(
-		history.epoch, np.array(history.history['mean_absolute_error']), label='Train Loss'
-	)
-	plt.plot(
-		history.epoch, np.array(history.history['val_mean_absolute_error']), label='Val loss'
-	)
+	if is_classification:
+		# print(dir(history.history))
+		plt.plot(
+			history.epoch, np.array(history.history['acc']), label='Accuracy'
+		)
+	else:
+		plt.plot(
+			history.epoch, np.array(history.history['mean_absolute_error']), label='Train Loss'
+		)
+		plt.plot(
+			history.epoch, np.array(history.history['val_mean_absolute_error']), label='Val loss'
+		)
 	plt.legend()
-	plt.ylim([0, 1])
+	plt.ylim([0, 1.5])
 	plt.show()
 
 
 def plot_prediction(model, test_data, test_labels, tag):
 	test_predictions = model.predict(test_data).flatten()
-	print(test_predictions)
+	# print(test_predictions)
 	plt.scatter(test_labels, test_predictions)
 	plt.xlabel('True Values (%s)' % tag)
 	plt.ylabel('Predictions (%s)' % tag)
