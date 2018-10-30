@@ -35,7 +35,10 @@ def create_regression_model(number_of_words: int, input_length: int) -> Model:
 	return model
 
 
-def train_regression_model() -> model:
+def train_regression_model() -> Model:
+	"""
+	Trains and returns a regression model
+	"""
 	texts, like_labels = data.data_util.load_text_with_specific_label(
 		DEFAULT_FILE_NAME,
 		data.data_util.FbReaction.LIKE_INDEX

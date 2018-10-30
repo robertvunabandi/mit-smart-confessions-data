@@ -18,6 +18,11 @@ LSTM_HIDDEN_NEURONS = 100
 
 
 def create_lstm_model(number_of_words: int, input_length: int) -> Model:
+	"""
+	:param number_of_words : int
+	:param input_length : in
+	:return Model
+	"""
 	model = Sequential()
 	model.add(layers.Embedding(number_of_words, EMBEDDING_SIZE, input_length=input_length - 1))
 	model.add(layers.LSTM(LSTM_HIDDEN_NEURONS))
@@ -28,6 +33,7 @@ def create_lstm_model(number_of_words: int, input_length: int) -> Model:
 
 def train_lstm_model():
 	"""
+	Trains and returns an LSTM model
 	this is extremely slow especially now that we're using 4000+ examples
 	"""
 	texts, _ = data.data_util.load_text_with_specific_label(

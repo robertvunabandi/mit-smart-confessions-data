@@ -17,10 +17,12 @@ VALIDATION_SPLIT = 0.33
 # https://www.tensorflow.org/tutorials/keras/basic_text_classification
 
 
-def create_classifier_model(number_of_words: int, input_length: int) -> Model:
+def create_classifier_model(number_of_words: int, input_length: int, output_neurons: int = 1) -> Model:
 	"""
 	:param number_of_words : int
-	:param input_length : in
+	:param input_length : int
+	:param output_neurons : int
+		-> the number of output neurons. this must match the labels.
 	:return Model
 	"""
 	model = Sequential()
@@ -30,7 +32,8 @@ def create_classifier_model(number_of_words: int, input_length: int) -> Model:
 	model.add(layers.Dropout(0.25))
 	model.add(layers.Dense(64, activation="relu"))
 	model.add(layers.Dropout(0.1))
-	model.add(layers.Dense(1, activation="sigmoid"))
+	activation = "sigmoid" if output_neurons == 1 else "softmax"
+	model.add(layers.Dense(output_neurons, activation=activation))
 	# todo - include other metrics such as auc, roc in the future
 	# see https://stackoverflow.com/questions/41032551/how-to-compute-receiving-operating-characteristic-roc-and-auc-in-keras
 	model.compile(optimizer=optimizers.Adam(), loss="binary_crossentropy", metrics=["accuracy"])
@@ -38,7 +41,12 @@ def create_classifier_model(number_of_words: int, input_length: int) -> Model:
 	return model
 
 
-def run_binary_classifier_model(index):
+def run_binary_classifier_model(index: int) -> Model:
+	"""
+	Trains and returns a binary classification model
+	:param index : int
+		-> index for data label, see data.data_util.FbReaction
+	"""
 	texts, like_labels = data.data_util.load_text_with_specific_label(
 		DEFAULT_FILE_NAME,
 		index
@@ -69,6 +77,7 @@ def run_binary_classifier_model(index):
 		BATCH_SIZE,
 		VALIDATION_SPLIT,
 	)
+	return model
 
 
 def create_binary_labels_for_classification(labels: List[int], cut_off: int = 20) -> List[int]:
@@ -82,4 +91,4 @@ def create_binary_labels_for_classification(labels: List[int], cut_off: int = 20
 
 
 if __name__ == "__main__":
-	run_binary_classifier_model(data.data_util.FbReaction.LIKE_INDEX)
+	bin_model = run_binary_classifier_model(data.data_util.FbReaction.LIKE_INDEX)
