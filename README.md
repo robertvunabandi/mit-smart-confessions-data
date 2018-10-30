@@ -2,10 +2,12 @@
 
 ## Installation
 
-To create the virtualenv dev location (don't do this 
-again because it's done in this repo):
+Make sure you are using Python 3.6.x (3.6.7 preferably). Tensorflow will not run correctly with python 3.7.0. See [this link](https://www.python.org/downloads/release/python-367/) in which you can download python 3.6.7 (scroll to the bottom of the page). 
 
-	virtualenv facebookenv
+To create the virtualenv dev location (don't do this 
+again because it's done in this repo) (more instructions [here](https://www.caseylabs.com/how-to-create-a-python-3-6-virtual-environment-on-ubuntu-16-04/)):
+
+	python3.6 -m venv virtualenv facebookenv # ensures a python3.6 virtualenv
 
 To activate, run:
 
