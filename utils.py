@@ -8,6 +8,61 @@ DATE_FORMAT = "YYYY-MM-DD"
 DATETIME_FORMAT = "YYYY-MM-DDTHH:MM:SS"
 
 
+# ********************
+# String Related Utils
+# ********************
+
+class Str:
+	@staticmethod
+	def pad_str_left(string, length: int, add: str) -> str:
+		"""
+		pads the string on the left side by adding the add string to the
+		left as many times as necessary such that the output is "[add,]string"
+
+		Parameters
+		----------
+		:param string : str
+			the string to pad with add
+		:param length : str
+			the minimum length that the string needs to have
+		:param add : str
+			the string to add in case the output is not long enough
+
+		Returns
+		-------
+		:return : str
+		"""
+		out_string = string
+		while len(out_string) < length:
+			out_string = add + out_string
+		return out_string
+
+	@staticmethod
+	def remove_whitespaces(text: str) -> str:
+		"""
+		:param text : str
+		:return str
+		"""
+		return text.lstrip().rstrip()
+
+	@staticmethod
+	def extract_words_from_text_with_filters(text: str, char_filters: str) -> list:
+		"""
+		:param text : str
+		:param char_filters : str
+		:return list[str]
+		"""
+		new_text = text.lower()
+		for char_filter in iter(char_filters):
+			new_text = "".join(new_text.split(char_filter))
+		return new_text.split(" ")
+
+
+# ******************
+# Date Related Utils
+# ******************
+
+
 def is_leap_year(year: str) -> bool:
 	"""
 	All the years that are perfectly divisible by 4 are called as Leap
@@ -73,30 +128,6 @@ def extract_date_from_date_time(date_time: str) -> str:
 	raise ValueError("Invalid date_time input given. Got (%s)" % date_time)
 
 
-def pad_str_left(string, length: int, add: str) -> str:
-	"""
-	pads the string on the left side by adding the add string to the
-	left as many times as necessary such that the output is "[add,]string"
-
-	Parameters
-	----------
-	:param string : str
-		the string to pad with add
-	:param length : str
-		the minimum length that the string needs to have
-	:param add : str
-		the string to add in case the output is not long enough
-
-	Returns
-	-------
-	:return : str
-	"""
-	out_string = string
-	while len(out_string) < length:
-		out_string = add + out_string
-	return out_string
-
-
 def get_year_month_day_from_date(date: str) -> tuple:
 	"""
 	returns the year, month, and day from the date string
@@ -145,7 +176,7 @@ def add_days_to_date(date: str, additional_days: int) -> str:
 			year = str(int(year) + 1)
 			month = "01"
 		return add_days_to_date(
-			"%s-%s-%s" % (year, pad_str_left(month, length=2, add="0"), "01"),
+			"%s-%s-%s" % (year, Str.pad_str_left(month, length=2, add="0"), "01"),
 			remaining_dates
 		)
 	# subtraction case: subtract enough days to move back to the
@@ -159,12 +190,12 @@ def add_days_to_date(date: str, additional_days: int) -> str:
 			month = "12"
 		new_day = str(get_days_in_month(month, year))
 		return add_days_to_date(
-			"%s-%s-%s" % (year, pad_str_left(month, length=2, add="0"), new_day),
+			"%s-%s-%s" % (year, Str.pad_str_left(month, length=2, add="0"), new_day),
 			remaining_dates
 		)
 	# if no anomaly happen with new_day (i.e. a valid day), return
 	# the result
-	return "%s-%s-%s" % (year, month, pad_str_left(str(new_day), length=2, add="0"))
+	return "%s-%s-%s" % (year, month, Str.pad_str_left(str(new_day), length=2, add="0"))
 
 
 def is_date_is_before(date: str, target_date: str) -> bool:
