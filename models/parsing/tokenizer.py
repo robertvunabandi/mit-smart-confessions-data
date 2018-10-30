@@ -4,11 +4,13 @@ from typing import Dict, List, Tuple, Any
 import numpy as np
 import utils
 
+# todo set the seeds for reproducibility
+
 
 # words to filter out of the strings
 FILTERS = '!"#$%&()*+,-./:;<=>?@[\]^_`{|}~	'
 PAD, START, UNKNOWN, UNUSED, END = "<PAD>", "<START>", "<UNK>", "<UNUSED>", "<END>"
-# todo - figure out whether we want to use this or not
+# todo - figure out whether we want/need to use this or not
 # additional words to add to the tokenizer
 # the Tokenizer object will ignore the words that it doesn't know
 # when making predictions. adding these words can help the tokenizer
