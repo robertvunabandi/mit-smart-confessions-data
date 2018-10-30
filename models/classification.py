@@ -60,6 +60,10 @@ def run_classifier_model():
 	plot_classification_history(history)
 	plot_prediction(model, train_data, train_labels, "train")
 	plot_prediction(model, test_data, test_labels, "test")
+	model.save(
+		"storage/classification__%d_%d_%d_%f.h5"
+		% (EMBEDDING_SIZE, EPOCHS, BATCH_SIZE, VALIDATION_SPLIT)
+	)
 
 
 def create_binary_labels_for_classification(labels: List[int], cut_off: int = 20) -> List[int]:
