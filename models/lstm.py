@@ -8,6 +8,9 @@ from keras.preprocessing.sequence import pad_sequences
 from typing import Dict, List, Tuple
 
 
+# todo set the seeds for reproducibility
+
+
 DEFAULT_FILE_NAME = "all_confessions/all"
 EMBEDDING_SIZE = 16
 EPOCHS = 1

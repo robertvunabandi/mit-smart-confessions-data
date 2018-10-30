@@ -4,8 +4,6 @@ from typing import Dict, List, Tuple, Any
 import numpy as np
 import utils
 
-# todo set the seeds for reproducibility
-
 
 # words to filter out of the strings
 FILTERS = '!"#$%&()*+,-./:;<=>?@[\]^_`{|}~	'
