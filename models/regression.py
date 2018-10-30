@@ -1,5 +1,6 @@
 import data.data_util
 import models.parsing.tokenizer as text_tokenizer
+import models.storage.store as model_store
 from keras import Sequential, Model, layers, optimizers
 from models.plotting.plot import plot_regression_history, plot_prediction
 
@@ -34,7 +35,7 @@ def create_regression_model(number_of_words: int, input_length: int) -> Model:
 	return model
 
 
-def run_regression_model():
+def train_regression_model() -> model:
 	texts, like_labels = data.data_util.load_text_with_specific_label(
 		DEFAULT_FILE_NAME,
 		data.data_util.FbReaction.LIKE_INDEX
@@ -50,18 +51,24 @@ def run_regression_model():
 		epochs=EPOCHS,
 		batch_size=BATCH_SIZE,
 		validation_split=VALIDATION_SPLIT,
-		verbose=1
+		verbose=1,
 	)
 	loss, accuracy = model.evaluate(test_data, test_labels)
 	print("test set results: loss: %f, mean absolute error: %f" % (loss, accuracy))
 	plot_regression_history(history)
 	plot_prediction(model, train_data, train_labels, "train")
 	plot_prediction(model, test_data, test_labels, "test")
-	model.save(
-		"storage/regression__%d_%d_%d_%f.h5"
-		% (EMBEDDING_SIZE, EPOCHS, BATCH_SIZE, VALIDATION_SPLIT)
+	model_store.save_model(
+		model,
+		"regression",
+		EMBEDDING_SIZE,
+		EPOCHS,
+		BATCH_SIZE,
+		VALIDATION_SPLIT,
 	)
+	return model
 
 
-if __name__ == '__main__':
-	run_regression_model()
+if __name__ == "__main__":
+	model = train_regression_model()
+	# todo - make some predictions after

@@ -1,5 +1,6 @@
 import data.data_util
 import models.parsing.tokenizer as text_tokenizer
+import models.storage.store as model_store
 from keras import Sequential, Model, layers, optimizers
 from typing import List
 from models.plotting.plot import plot_classification_history, plot_prediction
@@ -32,15 +33,15 @@ def create_classifier_model(number_of_words: int, input_length: int) -> Model:
 	model.add(layers.Dense(1, activation="sigmoid"))
 	# todo - include other metrics such as auc, roc in the future
 	# see https://stackoverflow.com/questions/41032551/how-to-compute-receiving-operating-characteristic-roc-and-auc-in-keras
-	model.compile(optimizer=optimizers.Adam(), loss='binary_crossentropy', metrics=['accuracy'])
+	model.compile(optimizer=optimizers.Adam(), loss="binary_crossentropy", metrics=["accuracy"])
 	model.summary()
 	return model
 
 
-def run_classifier_model():
+def run_binary_classifier_model(index):
 	texts, like_labels = data.data_util.load_text_with_specific_label(
 		DEFAULT_FILE_NAME,
-		data.data_util.FbReaction.LIKE_INDEX
+		index
 	)
 	binary_labels = create_binary_labels_for_classification(like_labels, 20)
 	sequences, num_words, index_to_word, word_to_index = text_tokenizer.get_text_items(texts)
@@ -53,16 +54,20 @@ def run_classifier_model():
 		epochs=EPOCHS,
 		batch_size=BATCH_SIZE,
 		validation_split=VALIDATION_SPLIT,
-		verbose=1
+		verbose=1,
 	)
 	loss, accuracy = model.evaluate(test_data, test_labels)
 	print("test set results: loss: %f, accuracy: %f" % (loss, accuracy))
 	plot_classification_history(history)
 	plot_prediction(model, train_data, train_labels, "train")
 	plot_prediction(model, test_data, test_labels, "test")
-	model.save(
-		"storage/classification__%d_%d_%d_%f.h5"
-		% (EMBEDDING_SIZE, EPOCHS, BATCH_SIZE, VALIDATION_SPLIT)
+	model_store.save_model(
+		model,
+		"binary_classification_index_%d" % index,
+		EMBEDDING_SIZE,
+		EPOCHS,
+		BATCH_SIZE,
+		VALIDATION_SPLIT,
 	)
 
 
@@ -76,5 +81,5 @@ def create_binary_labels_for_classification(labels: List[int], cut_off: int = 20
 	return [1 if label > cut_off else 0 for label in labels]
 
 
-if __name__ == '__main__':
-	run_classifier_model()
+if __name__ == "__main__":
+	run_binary_classifier_model(data.data_util.FbReaction.LIKE_INDEX)
