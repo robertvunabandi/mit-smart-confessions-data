@@ -58,7 +58,7 @@ def should_include_field_in_confession(field: str) -> bool:
 
 def summer_confessions() -> list:
 	data = []
-	with open("files/summer_confessions.csv", "r") as csv_file:
+	with open("../summer_confessions.csv", "r") as csv_file:
 		reader = csv.DictReader(csv_file)
 		for row in reader:
 			confession = {}
@@ -74,5 +74,5 @@ def summer_confessions() -> list:
 
 if __name__ == '__main__':
 	sc = summer_confessions()
-	with open("files/summer_confessions.json", "w") as json_file:
+	with open("../summer_confessions_array.json", "w") as json_file:
 		json.dump(sc, json_file)

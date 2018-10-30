@@ -2,10 +2,13 @@ import json
 import re
 import random
 import utils
+import os
 from constants import FB_REACTIONS
-from typing import Tuple, List, Dict, Any, NewType
+from typing import Tuple, List, Dict, Any, NewType, Union
+import numpy as np
 
 
+DATA_UTIL_DIR = os.path.dirname(__file__)
 DEFAULT_COMMENT_COUNT = 0
 CONFESSION_NUMBER_INDEX = 0
 CONFESSION_TEXT_INDEX = 1
@@ -55,6 +58,24 @@ def load_text_with_specific_label(
 	return texts, labels
 
 
+def load_text_with_labels_percentages(file_name: str) -> Tuple[List[str], List[FbReactionCount]]:
+	"""
+	:param file_name : str
+	:return tuple<confessions, labels>
+		-> confessions : list[str]
+		-> labels : list[tuple<reaction_percentage x 6, total_reactions>]
+			-> reaction_percentage : float
+			-> total_reactions : int (the total number of reaction for that confession)
+	"""
+	data = list(load_text_with_every_label(file_name))
+	random.shuffle(data)
+	texts, labels = zip(*[
+		(row[CONFESSION_TEXT_INDEX], _labels_to_percentages(row[CONFESSION_REACTION_INDEX]))
+		for row in data
+	])
+	return texts, labels
+
+
 def load_text_with_every_label(
 	file_name: str
 ) -> Tuple[List[str], List[Tuple[Likes, Loves, Wows, Hahas, Sads, Angrys, Comments]]]:
@@ -64,9 +85,68 @@ def load_text_with_every_label(
 		yield (row[CONFESSION_NUMBER_INDEX], row[CONFESSION_TEXT_INDEX], row[CONFESSION_REACTION_INDEX])
 
 
+# ******************************
+# Methods to Manipulate the Data
+# ******************************
+
+def bucketize_labels(
+	labels: List[int],
+	buckets: int) -> Tuple[List[Tuple[int, ...]], Tuple[Tuple[int, int], ...]]:
+	"""
+	todo - method to be implemented
+	bucketize the labels with the number of buckets such that
+	each bucket has a roughly equal number of labels in it. I.e.,
+	for each label i, return a tuple of the form (0,0,...,0,1,0,...,0)
+	with length {buckets} (a one hot encoding denoting which bucket
+	this label belongs to).
+
+	In addition to that, return a tuple of ranges that determine what
+	are the bucket ranges.
+
+	:param labels : list[int]
+	:param buckets : int
+	:return : tuple<labels_in_buckets, bucket_ranges>
+		-> labels_in_buckets : list[bucket_for_label]
+			-> bucket_for_label : tuple[int]
+		-> bucket_ranges : Tuple[bucket_range]
+			-> bucket_range : Tuple<min_value, max_value>
+				-> min_value : int
+				-> max_value : int
+	"""
+	raise NotImplementedError
+
+
+def standardize_array(
+	array: Union[List[int], Tuple[int], np.ndarray]) -> Tuple[Union[List[int], np.ndarray], float, float]:
+	"""
+	:param array : list[int]|numpy.array[int]
+	:return tuple<array.type, int, int>
+		-> standardized array, average, standard deviation
+	"""
+	if type(array) == list or type(array) == tuple:
+		np_array, avg, std = standardize_array(np.array(array))
+		return np_array.tolist(), avg, std
+	if isinstance(array, np.ndarray):
+		avg, std = np.average(array), np.std(array)
+		return (array - avg) / std, avg, std
+	raise TypeError("array must be either a list of numbers or a numpy array")
+
+
 # ************************************
 # Private Methods To Be Used Here Only
 # ************************************
+
+
+def _labels_to_percentages(
+	labels: Tuple[FbReactionCount]) -> Tuple[float, ...]:
+	label_percentage = [0.0] * 7
+	total = sum(labels[:-1])  # don't include comments
+	if total == 0.0:
+		return tuple(label_percentage)
+	for index in range(6):
+		label_percentage[index] = labels[index] / total
+	label_percentage[-1] = total
+	return tuple(label_percentage)
 
 
 def _load_text(file_name: str) -> List[Dict[str, Any]]:
@@ -74,7 +154,7 @@ def _load_text(file_name: str) -> List[Dict[str, Any]]:
 	:param file_name : str
 	:return list[dict<str, int|str>]
 	"""
-	with open("%s.json" % file_name, "r") as f:
+	with open("%s/%s.json" % (DATA_UTIL_DIR, file_name), "r") as f:
 		return json.load(f)
 
 
@@ -110,7 +190,3 @@ def _get_labels(post_obj: dict) -> Tuple[FbReactionCount, ...]:
 	return tuple(
 		[post_obj.get("reactions", {}).get(fb_type, 0) for fb_type in FB_REACTIONS] + [comment_count]
 	)
-
-
-if __name__ == '__main__':
-    pass

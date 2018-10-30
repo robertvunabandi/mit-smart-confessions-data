@@ -30,7 +30,7 @@ collect_page_data:
 """
 
 import facebook
-import config
+from data.scripts import config
 import utils
 import json
 
@@ -111,8 +111,8 @@ def collect_page_data(
 
 	# save the comments of each post, do this separately because this
 	# will take much longer
-	date_to_posts_with_comments = label_comments(fb_graph, date_to_labelled_posts, verbose)
-	store_data_with_comments(name, date_to_posts_with_comments, dates)
+	# date_to_posts_with_comments = label_comments(fb_graph, date_to_labelled_posts, verbose)
+	# store_data_with_comments(name, date_to_posts_with_comments, dates)
 
 	# announce that we're done collecting data
 	print("PAGE DATA COLLECTION COMPLETED SUCCESSFULLY!")
@@ -253,7 +253,7 @@ def store_page_user_data(page_name: str, page_user_data: list) -> None:
 	:param page_name : str
 	:param page_user_data : list[dict<str, int>]
 	"""
-	with open("data/%s_page_data.json" % page_name, "w") as data_file:
+	with open("../%s_page_data.json" % page_name, "w") as data_file:
 		json.dump(page_user_data, data_file)
 
 
@@ -450,17 +450,17 @@ def store_post_data(name: str, date_to_labelled_posts: dict, dates: list, suffix
 	:param suffix : str
 		An additional suffix to add to the ext
 	"""
-	# store as a dictionary
 	suffix_name = "" if suffix is None or len(suffix) == 0 else "_" + suffix
-	with open("data/%s_feed_object%s.json" % (name, suffix_name), "w") as dict_file:
-		json.dump(date_to_labelled_posts, dict_file)
+	# store as a dictionary - this is not a good format, so we will just stick to array
+	# with open("data/%s_feed_object%s.json" % (name, suffix_name), "w") as dict_file:
+	# 	json.dump(date_to_labelled_posts, dict_file)
 
 	# store as a list
 	labelled_post_list = []
 	for date in dates:
 		if date in date_to_labelled_posts:
 			labelled_post_list += date_to_labelled_posts[date]
-	with open("data/%s_feed_array%s.json" % (name, suffix_name), "w") as array_file:
+	with open("../%s_feed_array%s.json" % (name, suffix_name), "w") as array_file:
 		json.dump(labelled_post_list, array_file)
 
 
@@ -619,9 +619,12 @@ def store_data_with_comments(name: str, date_to_labelled_posts: dict, dates: lis
 	store_post_data(name, date_to_labelled_posts, dates, suffix="with_comments")
 
 
-should_collect_data = True
+should_collect_data = False
 if __name__ == '__main__':
 	_page_title = "mit_summer_confessions"
+	# _page_id = config.MIT_AFRICANS_ID
+	# _access_token = config.MIT_AFRICANS_ACCESS_TOKEN
+	# _start_date = config.MIT_AFRICANS_CREATION_DATE
 	_page_id = config.MIT_SUMMER_CONFESSIONS_ID
 	_access_token = config.MIT_SUMMER_CONFESSIONS_ACCESS_TOKEN
 	_start_date = config.MIT_SUMMER_CONFESSIONS_CREATION_DATE
