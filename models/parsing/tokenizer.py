@@ -7,7 +7,7 @@ import utils
 
 # words to filter out of the strings
 FILTERS = '!"#$%&()*+,-./:;<=>?@[\]^_`{|}~	'
-PAD, START, UNKNOWN, UNUSED = "<PAD>", "<START>", "<UNK>", "<UNUSED>"
+PAD, START, UNKNOWN, UNUSED, END = "<PAD>", "<START>", "<UNK>", "<UNUSED>", "<END>"
 # todo - figure out whether we want to use this or not
 # additional words to add to the tokenizer
 # the Tokenizer object will ignore the words that it doesn't know
@@ -90,7 +90,7 @@ def convert_sequence_to_text(sequence: List[int], index_to_word: Dict[int, str])
 	:param index_to_word : dict<int, str>
 	:return str
 	"""
-	return ' '.join([index_to_word.get(index, UNKNOWN) for index in sequence])
+	return " ".join([index_to_word.get(index, UNKNOWN) for index in sequence])
 
 
 # ************************************
@@ -104,11 +104,12 @@ def _word_index_maps(tokenizer: Tokenizer) -> Tuple[Dict[int, str], Dict[str, in
 	:param tokenizer : Tokenizer
 	:return tuple<dict<int, str>, dict<str, int>>
 	"""
-	word_to_index = {k: (v + 3) for k, v in tokenizer.word_index.items()}
+	word_to_index = {k: (v + 4) for k, v in tokenizer.word_index.items()}
 	word_to_index[START] = 0
 	word_to_index[PAD] = 1
 	word_to_index[UNKNOWN] = 2
 	word_to_index[UNUSED] = 3
+	word_to_index[END] = 4
 	index_to_word = dict([(value, key) for (key, value) in word_to_index.items()])
 	return index_to_word, word_to_index
 
