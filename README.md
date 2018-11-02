@@ -1,4 +1,4 @@
-# MIT Smart Confessions DATA
+# MIT Smart Confessions Api
 
 ## Installation
 
@@ -7,7 +7,7 @@ Make sure you are using Python 3.6.x (3.6.7 preferably). Tensorflow will not run
 To create the virtualenv dev location (don't do this 
 again because it's done in this repo) (more instructions [here](https://www.caseylabs.com/how-to-create-a-python-3-6-virtual-environment-on-ubuntu-16-04/)):
 
-	python3.6 -m venv virtualenv facebookenv # ensures a python3.6 virtualenv
+	python3.6 -m venv virtualenv facebookenv # ensures a python 3.6 virtualenv
 
 To activate, run:
 
