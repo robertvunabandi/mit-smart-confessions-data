@@ -55,16 +55,12 @@ def split_dataset(
 	:return : tuple<np.array, np.array, np.array, np.array, int>
 		-> training data, training labels, testing data, testing labels, max sequence length
 	"""
-	max_sequence_length = _find_max_sentence_length(sequences)
+	max_sequence_length = find_max_sentence_length(sequences)
 	split_index = len(sequences) - int(test_percentage * len(sequences))
 	raw_train_data, raw_train_labels = sequences[:split_index], list(labels[:split_index])
 	raw_test_data, raw_test_labels = sequences[split_index:], list(labels[split_index:])
-	train_data = pad_sequences(
-		raw_train_data, value=word_to_index[PAD], maxlen=max_sequence_length, padding="post"
-	)
-	test_data = pad_sequences(
-		raw_test_data, value=word_to_index[PAD], maxlen=max_sequence_length, padding="post"
-	)
+	train_data = pad_data_sequences(raw_train_data, word_to_index, max_sequence_length)
+	test_data = pad_data_sequences(raw_test_data, word_to_index, max_sequence_length)
 	if len(np.array(labels).shape) == 1:
 		train_labels = np.array([raw_train_labels]).T
 		test_labels = np.array([raw_test_labels]).T
@@ -72,6 +68,28 @@ def split_dataset(
 		train_labels = np.array(raw_train_labels)
 		test_labels = np.array(raw_test_labels)
 	return train_data, train_labels, test_data, test_labels, max_sequence_length
+
+
+def find_max_sentence_length(sequences: list) -> int:
+	"""
+	returns the longest sequence, which will be used as the maximum sequence.
+	:param sequences : list[list[int]]
+	:return int
+	"""
+	max_length = None
+	for seq in sequences:
+		if max_length is None or len(seq) > max_length:
+			max_length = len(seq)
+	return max_length
+
+
+def pad_data_sequences(
+	sequences: List[List[int]],
+	word_to_index: Dict[str, int],
+	max_sequence_length: int) -> np.ndarray:
+	return pad_sequences(
+		sequences, value=word_to_index[PAD], maxlen=max_sequence_length, padding="post"
+	)
 
 
 def convert_text_to_sequence(text: str, word_to_index: Dict[str, int]) -> list:
@@ -127,19 +145,3 @@ def _update_sequences_with_new_word_index_map(
 		[word_to_index[raw_index_to_word[index]] for index in sequence]
 		for sequence in raw_sequences
 	]
-
-
-def _find_max_sentence_length(sequences: list) -> int:
-	"""
-	:param sequences : list[list[int]]
-	:return int
-	"""
-	max_length = None
-	for seq in sequences:
-		if max_length is None or len(seq) > max_length:
-			max_length = len(seq)
-	# return the next power of 2, there's no reason why do this lol.
-	length_power_2 = 1
-	while length_power_2 < max_length:
-		length_power_2 *= 2
-	return length_power_2
