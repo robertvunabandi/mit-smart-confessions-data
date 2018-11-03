@@ -13,6 +13,7 @@ DEFAULT_COMMENT_COUNT = 0
 CONFESSION_NUMBER_INDEX = 0
 CONFESSION_TEXT_INDEX = 1
 CONFESSION_REACTION_INDEX = 2
+MAX_CONFESSION_CHARACTER_LENGTH = 500
 
 
 class FbReaction:
@@ -49,8 +50,7 @@ def load_text_with_specific_label(
 	:param label_index : str
 	:return tuple<list[str], list[int]>
 	"""
-	data = list(load_text_with_every_label(file_name))
-	random.shuffle(data)
+	data = load_text_with_every_label(file_name)
 	texts, labels = zip(*[
 		(row[CONFESSION_TEXT_INDEX], row[CONFESSION_REACTION_INDEX][label_index])
 		for row in data
@@ -67,8 +67,7 @@ def load_text_with_labels_percentages(file_name: str) -> Tuple[List[str], List[F
 			-> reaction_percentage : float
 			-> total_reactions : int (the total number of reaction for that confession)
 	"""
-	data = list(load_text_with_every_label(file_name))
-	random.shuffle(data)
+	data = load_text_with_every_label(file_name)
 	texts, labels = zip(*[
 		(row[CONFESSION_TEXT_INDEX], _labels_to_percentages(row[CONFESSION_REACTION_INDEX]))
 		for row in data
@@ -77,12 +76,17 @@ def load_text_with_labels_percentages(file_name: str) -> Tuple[List[str], List[F
 
 
 def load_text_with_every_label(
-	file_name: str
-) -> Tuple[List[str], List[Tuple[Likes, Loves, Wows, Hahas, Sads, Angrys, Comments]]]:
+	file_name: str,
+	max_confession_character_length: int = MAX_CONFESSION_CHARACTER_LENGTH,
+) -> List[Tuple[int, str, Tuple[FbReactionCount, ...]]]:
 	data = _extract_text_and_labels(_load_text(file_name))
-	random.shuffle(data)
+	dataset = []
 	for row in data:
-		yield (row[CONFESSION_NUMBER_INDEX], row[CONFESSION_TEXT_INDEX], row[CONFESSION_REACTION_INDEX])
+		if len(row[CONFESSION_TEXT_INDEX]) < max_confession_character_length:
+			dataset.append(
+				(row[CONFESSION_NUMBER_INDEX], row[CONFESSION_TEXT_INDEX], row[CONFESSION_REACTION_INDEX])
+			)
+	return dataset
 
 
 # ******************************
@@ -138,7 +142,7 @@ def standardize_array(
 
 
 def _labels_to_percentages(
-	labels: Tuple[FbReactionCount]) -> Tuple[float, ...]:
+	labels: Tuple[FbReactionCount, ...]) -> Tuple[float, ...]:
 	label_percentage = [0.0] * 7
 	total = sum(labels[:-1])  # don't include comments
 	if total == 0.0:
