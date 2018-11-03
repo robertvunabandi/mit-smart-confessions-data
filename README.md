@@ -1,4 +1,4 @@
-# MIT Smart Confessions Api
+# MIT Smart Confessions API
 
 ## Installation
 
