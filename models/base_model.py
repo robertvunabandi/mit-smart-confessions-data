@@ -136,8 +136,8 @@ class BaseModel:
 		loss, metric = self.model.evaluate(self.test_data, self.test_labels)
 		return loss, metric
 
-	def predict(self, data_point: np.ndarray, *args, **kwargs) -> Any:
-		return self.model.predict(data_point, args, kwargs)
+	def predict(self, data_point: np.ndarray) -> Any:
+		return self.model.predict(data_point)
 
 	def save(self) -> None:
 		"""
@@ -162,10 +162,18 @@ class BaseModel:
 			self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
 			self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
 		)
+		print("loading model from %s" % model_path)
 		self.model = keras.models.load_model(model_path)
 
+	def pad_sequences(self, sequences: List[List[int]]) -> np.ndarray:
+		return models.parsing.tokenizer.pad_data_sequences(
+			sequences,
+			self.word_to_index,
+			self.max_sequence_length,
+		)
+
 	# **********************************
-	# creates the model and evaluates it
+	# Creates the model and evaluates it
 	# **********************************
 
 	def run(self, save: bool = True) -> None:
@@ -180,6 +188,14 @@ class BaseModel:
 		if save:
 			self.save()
 
+	# *****************************
+	# Methods to test the model out
+	# *****************************
+
+	def convert_text_to_padded_sequence(self, text: str) -> np.ndarray:
+		sequence = models.parsing.tokenizer.convert_text_to_sequence(text, self.word_to_index)
+		return self.pad_sequences([sequence])
+
 	# ***************************************************
 	# Methods to be implemented by all inheriting classes
 	# ***************************************************
@@ -191,8 +207,7 @@ class BaseModel:
 		"""
 		given all the texts and labels, convert them into
 		numpy arrays of training data and labels.
-		use models.parsing.tokenizer.pad_data_sequences with
-		sequences, self.word_to_index, and self.max_sequence_length
+		use self.pad_sequences with sequences to pad
 		todo - seems like most modifications are needed only on the labels
 			-> so maybe just create a method that changes the labels or
 			-> create a method that pads the sequences? however, the
@@ -201,10 +216,10 @@ class BaseModel:
 		"""
 		raise NotImplementedError
 
-	def create(self) -> keras.Model:
+	def create(self) -> None:
 		"""
 		creates self.model in place
-		use self.num_words and self.max_sequence_length
+		use self.num_words and self.max_sequence_length for embedding layer
 		"""
 		raise NotImplementedError
 
