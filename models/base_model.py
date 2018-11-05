@@ -172,6 +172,7 @@ class BaseModel:
 		"""
 		runs the model
 		"""
+		self.setup_base_data()
 		self.update_train_and_test_data()
 		self.create()
 		self.train()
