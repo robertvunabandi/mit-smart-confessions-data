@@ -67,7 +67,8 @@ class BaseModel:
 		BaseModel's hyperparameters
 		"""
 		key_attributes = {attr for attr in dir(BaseModel) if "KEY_" in attr}
-		assert hyperparameter_key in key_attributes, "the key given is not a valid key attribute"
+		key_values = {getattr(BaseModel, key) for key in key_attributes}
+		assert hyperparameter_key in key_values, "the key given is not a valid key attribute"
 
 	def setup_base_data(self) -> None:
 		"""
@@ -91,7 +92,7 @@ class BaseModel:
 		"""
 		# shuffle the data
 		np_data, np_labels = self.parse_base_data(self.sequences, self.labels)
-		split = np_data.shape[0] - (self.get_hyperparam(BaseModel.KEY_TEST_SPLIT) * np_data.shape[0])
+		split = int(np_data.shape[0] - (self.get_hyperparam(BaseModel.KEY_TEST_SPLIT) * np_data.shape[0]))
 		train_d, train_l = np_data[:split, :], np_labels[:split, :]
 		test_d, test_l = np_data[split:, :], np_labels[split:, :]
 		return train_d, train_l, test_d, test_l
@@ -126,13 +127,13 @@ class BaseModel:
 		)
 		self.last_train_history = history
 
-	def evaluate(self, *args, **kwargs) -> Tuple[Any, Any]:
+	def evaluate(self) -> Tuple[Any, Any]:
 		""" evaluates the model and returns the metrics """
 		assert self.test_data is not None, \
 			"test_data is None. The model may not have been trained. " \
 			"Call the method `update_train_and_test_data` " \
 			"on this instance of %s" % self.__class__.__name__
-		loss, metric = self.model.evaluate(self.test_data, self.test_labels, args, kwargs)
+		loss, metric = self.model.evaluate(self.test_data, self.test_labels)
 		return loss, metric
 
 	def predict(self, data_point: np.ndarray, *args, **kwargs) -> Any:
@@ -167,15 +168,16 @@ class BaseModel:
 	# creates the model and evaluates it
 	# **********************************
 
-	def run(self, *eval_args, **eval_kwargs) -> None:
+	def run(self, save: bool = True) -> None:
 		"""
 		runs the model
 		"""
 		self.update_train_and_test_data()
 		self.create()
 		self.train()
-		self.evaluate(eval_args, eval_kwargs)
-		self.save()
+		self.evaluate()
+		if save:
+			self.save()
 
 	# ***************************************************
 	# Methods to be implemented by all inheriting classes
@@ -183,7 +185,7 @@ class BaseModel:
 
 	def parse_base_data(
 		self,
-		sequences: List[int],
+		sequences: List[List[int]],
 		labels: Tuple[Union[int, float], ...]) -> Tuple[np.ndarray, np.ndarray]:
 		"""
 		given all the texts and labels, convert them into
