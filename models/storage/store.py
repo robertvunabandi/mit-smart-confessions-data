@@ -25,7 +25,9 @@ def save_model(
 	:param validation_split : float (min: 0.0, max: 1.0)
 	"""
 	model_suffix = _get_model_suffix(embedding_size, epochs, batch_size, validation_split)
-	model.save("%s/%s__%s.h5" % (STORE_DIR, name, model_suffix))
+	file_path = "%s/%s__%s.h5" % (STORE_DIR, name, model_suffix)
+	print("storing model into %s" % file_path)
+	model.save(file_path)
 
 
 def get_model_title(
@@ -38,7 +40,8 @@ def get_model_title(
 	Same parameters as save_model. See above.
 	"""
 	model_suffix = _get_model_suffix(embedding_size, epochs, batch_size, validation_split)
-	return "%s/%s__%s.h5" % (STORE_DIR, name, model_suffix)
+	file_path = "%s/%s__%s.h5" % (STORE_DIR, name, model_suffix)
+	return file_path
 
 
 def _get_model_suffix(
