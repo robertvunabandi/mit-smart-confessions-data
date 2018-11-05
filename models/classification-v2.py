@@ -1,7 +1,6 @@
-import numpy as np
 import data.data_util
+import numpy as np
 import keras
-import models.parsing.tokenizer
 from keras import layers
 from models.base_model import BaseModel
 from typing import List, Tuple, Union
