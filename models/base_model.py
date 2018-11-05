@@ -90,12 +90,24 @@ class BaseModel:
 		"""
 		gets the test and train data for this model
 		"""
-		# shuffle the data
 		np_data, np_labels = self.parse_base_data(self.sequences, self.labels)
+		# shuffle the data
+		np_data, np_labels = BaseModel.shuffle_data(np_data, np_labels)
 		split = int(np_data.shape[0] - (self.get_hyperparam(BaseModel.KEY_TEST_SPLIT) * np_data.shape[0]))
 		train_d, train_l = np_data[:split, :], np_labels[:split, :]
 		test_d, test_l = np_data[split:, :], np_labels[split:, :]
 		return train_d, train_l, test_d, test_l
+
+	@staticmethod
+	def shuffle_data(np_data: np.ndarray, np_labels: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+		"""
+		shuffles the data and labels given, and returns the shuffled
+		version in.
+		"""
+		_, data_col_index = np_data.shape
+		data_label_combination = np.hstack((np_data, np_labels))
+		np.random.shuffle(data_label_combination)
+		return data_label_combination[:, :data_col_index], data_label_combination[:, data_col_index:]
 
 	@staticmethod
 	def load_base_data(max_confession_length: int) -> Tuple[List[str], Tuple[Union[int, float], ...]]:

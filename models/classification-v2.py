@@ -49,6 +49,13 @@ if __name__ == '__main__':
 	bc = BinaryClassification(data.data_util.FbReaction.LIKE_INDEX)
 	# bc.run(save=True)
 	bc.load()
-	d = bc.convert_text_to_padded_sequence("God damn it, I love you. Why do you have to be my ex's friend?")
-	print(bc.predict(d))
-	# got [[0.00335187]] at running from scratch, got [[0.00335187]] at loading
+	d1 = bc.convert_text_to_padded_sequence("God damn it, I love you. Why do you have to be my ex's friend?")
+	d2 = bc.convert_text_to_padded_sequence("I'm a sophomore and I still don't know what Taylor series are.")
+	d3 = bc.convert_text_to_padded_sequence("I love MIT students")
+	d4 = bc.convert_text_to_padded_sequence("Hello there")
+	print(bc.predict(np.vstack((d1, d2, d3, d4))))
+	# got these after training and predicting
+	# [[0.00200981]  expected 0
+	#  [0.98490924]  expected 1
+	#  [0.20166883]
+	#  [0.49842522]]
