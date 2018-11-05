@@ -21,7 +21,7 @@ class BaseModel:
 		"batch_size": 64,
 		"validation_split": 0.33,
 		"embedding_size": 16,
-		"max_confession_length": data.data_util.MAX_CONFESSION_CHARACTER_LENGTH,
+		"max_confession_length": 400,
 	}
 
 	def __init__(self, model_type_name: str):
