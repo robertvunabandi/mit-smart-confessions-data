@@ -121,17 +121,16 @@ def bucketize_labels(
 
 
 def standardize_array(
-	array: Union[List[int], Tuple[int], np.ndarray]) -> Tuple[Union[List[int], np.ndarray], float, float]:
+	array: Union[List[int], Tuple[int], np.ndarray]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 	"""
-	:param array : list[int]|numpy.array[int]
-	:return tuple<array.type, int, int>
+	:param array : list[int] | tuple[int] | np.array
+	:return tuple<np.array, np.array, np.array>
 		-> standardized array, average, standard deviation
 	"""
 	if type(array) == list or type(array) == tuple:
-		np_array, avg, std = standardize_array(np.array(array))
-		return np_array.tolist(), avg, std
+		return standardize_array(np.array(array))
 	if isinstance(array, np.ndarray):
-		avg, std = np.average(array), np.std(array)
+		avg, std = np.average(array, axis=0), np.std(array, axis=0)
 		return (array - avg) / std, avg, std
 	raise TypeError("array must be either a list of numbers or a numpy array")
 
