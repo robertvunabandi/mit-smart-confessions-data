@@ -44,13 +44,16 @@ Comments = NewType("Comments", FbReactionCount)
 
 def load_text_with_specific_label(
 	file_name: str,
-	label_index: int) -> Tuple[List[str], List[FbReactionCount]]:
+	label_index: int,
+	max_conf_char_length: int = None) -> Tuple[List[str], List[FbReactionCount]]:
 	"""
-	:param file_name : str
-	:param label_index : str
-	:return tuple<list[str], list[int]>
+	loads the text like in load_text_with_every_label, but we only limit it
+	to one set of labels instead.
+	:return tuple<confessions, labels>
+		-> confessions: list[str]
+		-> labels: list[int]
 	"""
-	data = load_text_with_every_label(file_name)
+	data = load_text_with_every_label(file_name, max_conf_char_length)
 	texts, labels = zip(*[
 		(row[CONFESSION_TEXT_INDEX], row[CONFESSION_REACTION_INDEX][label_index])
 		for row in data
@@ -58,16 +61,17 @@ def load_text_with_specific_label(
 	return texts, labels
 
 
-def load_text_with_labels_percentages(file_name: str) -> Tuple[List[str], List[FbReactionCount]]:
+def load_text_with_labels_percentages(
+	file_name: str,
+	max_conf_char_length: int = None) -> Tuple[List[str], List[FbReactionCount]]:
 	"""
-	:param file_name : str
 	:return tuple<confessions, labels>
 		-> confessions : list[str]
 		-> labels : list[tuple<reaction_percentage x 6, total_reactions>]
 			-> reaction_percentage : float
 			-> total_reactions : int (the total number of reaction for that confession)
 	"""
-	data = load_text_with_every_label(file_name)
+	data = load_text_with_every_label(file_name, max_conf_char_length)
 	texts, labels = zip(*[
 		(row[CONFESSION_TEXT_INDEX], _labels_to_percentages(row[CONFESSION_REACTION_INDEX]))
 		for row in data
@@ -77,12 +81,22 @@ def load_text_with_labels_percentages(file_name: str) -> Tuple[List[str], List[F
 
 def load_text_with_every_label(
 	file_name: str,
-	max_confession_character_length: int = MAX_CONFESSION_CHARACTER_LENGTH,
+	max_confession_character_length: int = None,
 ) -> List[Tuple[int, str, Tuple[FbReactionCount, ...]]]:
+	"""
+	loads all the data from the json data file
+	:param file_name : str
+	:param max_confession_character_length : int
+	:return List[Tuple[confession_id, confession_text, confession_labels]]
+		-> confession_id : int
+		-> confession_text : str
+		-> confession_labels : Tuple[int, ...]
+	"""
 	data = _extract_text_and_labels(_load_text(file_name))
 	dataset = []
+	max_char_length_is_none = max_confession_character_length is None
 	for row in data:
-		if len(row[CONFESSION_TEXT_INDEX]) < max_confession_character_length:
+		if max_char_length_is_none or len(row[CONFESSION_TEXT_INDEX]) < max_confession_character_length:
 			dataset.append(
 				(row[CONFESSION_NUMBER_INDEX], row[CONFESSION_TEXT_INDEX], row[CONFESSION_REACTION_INDEX])
 			)
