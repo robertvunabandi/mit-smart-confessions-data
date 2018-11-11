@@ -41,6 +41,16 @@ class BaseModel:
 		# setting up parameters to be used later when testing/using the model
 		self.hyperparams = {}
 		self.last_train_history = None
+		# Set the model's metadata (things are things that are needed
+		# when predicting, which should also be loaded and not lost when
+		# saving the model).
+		self._metadata_attributes = [
+			"max_sequence_length",
+			"num_words",
+			"word_to_index",
+			"index_to_word",
+			"__hyperparams__"
+		]
 		# setup the model
 		self.setup_base_data()
 
@@ -59,6 +69,9 @@ class BaseModel:
 		"""
 		BaseModel.assert_valid_key(key)
 		self.hyperparams[key] = value
+
+	def register_metadata(self, metadata_attr: str):
+		self._metadata_attributes.append(metadata_attr)
 
 	@staticmethod
 	def assert_valid_key(hyperparameter_key: str) -> None:
@@ -164,6 +177,26 @@ class BaseModel:
 			self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
 			self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
 		)
+		models.storage.store.save_model_metadata(
+			self.get_model_metadata(),
+			self.model_type_name,
+			self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE),
+			self.get_hyperparam(BaseModel.KEY_EPOCHS),
+			self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
+			self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
+		)
+
+	def get_model_metadata(self) -> dict:
+		""" get the model's metadata, specified with self.metadata_attributes """
+		metadata = {
+			"__attributes__": self._metadata_attributes,
+			"__hyperparams__": self.hyperparams,
+		}
+		for attr in self._metadata_attributes:
+			if attr == "__hyperparams__":
+				continue
+			metadata[attr] = getattr(self, attr, None)
+		return metadata
 
 	def load(self) -> None:
 		""" loads the model in place into self.model """
@@ -176,6 +209,25 @@ class BaseModel:
 		)
 		print("loading model from %s" % model_path)
 		self.model = keras.models.load_model(model_path)
+		model_metadata = models.storage.store.load_model_metadata(model_path)
+		self.set_model_metadata_attr(model_metadata)
+
+	def set_model_metadata_attr(self, model_metadata: dict) -> None:
+		""" set hte model data attributes one by one """
+		for attr in model_metadata["__attributes__"]:
+			if attr == "__hyperparams__":
+				# handle __hyperparams__ differently
+				hyperparams = model_metadata.get(attr, {})
+				for h_key, h_value in hyperparams.items():
+					self.set_hyperparam(h_key, h_value)
+				continue
+			if attr == "index_to_word":
+				self.index_to_word = {
+					self.index_to_word[int(index)]: word
+					for index, word in model_metadata.get(attr, {}).items()
+				}
+				continue
+			setattr(self, attr, model_metadata.get(attr, None))
 
 	def pad_sequences(self, sequences: List[List[int]]) -> np.ndarray:
 		return models.parsing.tokenizer.pad_data_sequences(

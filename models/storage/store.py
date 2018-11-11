@@ -1,5 +1,7 @@
-from keras.models import Model
 import os
+import json
+
+from keras.models import Model
 
 
 STORE_DIR = os.path.dirname(__file__)
@@ -24,10 +26,32 @@ def save_model(
 	:param batch_size : int (min: 0, max: 999)
 	:param validation_split : float (min: 0.0, max: 1.0)
 	"""
-	model_suffix = _get_model_suffix(embedding_size, epochs, batch_size, validation_split)
-	file_path = "%s/%s__%s.h5" % (STORE_DIR, name, model_suffix)
+	file_path = get_model_title(name, embedding_size, epochs, batch_size, validation_split)
 	print("storing model into %s" % file_path)
 	model.save(file_path)
+
+
+def save_model_metadata(
+	metadata: dict,
+	name: str,
+	embedding_size: int,
+	epochs: int,
+	batch_size: int,
+	validation_split: float) -> None:
+	""" store the model's metadata, see save_model for parameters """
+	file_path = get_model_title(name, embedding_size, epochs, batch_size, validation_split)
+	print("storing model metadata into %s" % file_path)
+	file_path_json = file_path.replace(".h5", ".json")
+	with open(file_path_json, "w") as model_metadata_file:
+		json.dump(metadata, model_metadata_file)
+
+
+def load_model_metadata(model_path: str) -> dict:
+	model_path_json = model_path.replace(".h5", ".json")
+	print("loading model matadata from %s" % model_path_json)
+	with open(model_path_json, "r") as model_metadata_file:
+		content = model_metadata_file.read()
+		return json.loads(content)
 
 
 def get_model_title(
