@@ -1,11 +1,12 @@
 import json
 import re
-import random
-import utils
 import os
-from constants import FB_REACTIONS
+
 from typing import Tuple, List, Dict, Any, NewType, Union
 import numpy as np
+
+from constants import FB_REACTIONS
+import utils
 
 
 DATA_UTIL_DIR = os.path.dirname(__file__)
@@ -27,15 +28,7 @@ class FbReaction:
 
 
 # some custom types for code readability
-FbReactionCount = NewType("FbReactionCount", int)
-Likes = NewType("Likes", FbReactionCount)
-Loves = NewType("Loves", FbReactionCount)
-Wows = NewType("Wows", FbReactionCount)
-Hahas = NewType("Hahas", FbReactionCount)
-Sads = NewType("Sads", FbReactionCount)
-Angrys = NewType("Angrys", FbReactionCount)
-Comments = NewType("Comments", FbReactionCount)
-
+FbReactionCount = NewType("FbReactionCount", Union[int, float])
 
 # ****************************************
 # Main Methods: Use These to Load Examples
@@ -108,10 +101,9 @@ def load_text_with_every_label(
 # ******************************
 
 def bucketize_labels(
-	labels: List[int],
-	buckets: int) -> Tuple[List[Tuple[int, ...]], Tuple[Tuple[int, int], ...]]:
+	labels: List[int or float],
+	buckets: int) -> Tuple[List[List[int]], List[Tuple[int, int]]]:
 	"""
-	todo - method to be implemented
 	bucketize the labels with the number of buckets such that
 	each bucket has a roughly equal number of labels in it. I.e.,
 	for each label i, return a tuple of the form (0,0,...,0,1,0,...,0)
@@ -121,17 +113,50 @@ def bucketize_labels(
 	In addition to that, return a tuple of ranges that determine what
 	are the bucket ranges.
 
-	:param labels : list[int]
+	:param labels : list[int|float]
+		labels, which are numbers that may be floating points
 	:param buckets : int
-	:return : tuple<labels_in_buckets, bucket_ranges>
-		-> labels_in_buckets : list[bucket_for_label]
-			-> bucket_for_label : tuple[int]
-		-> bucket_ranges : Tuple[bucket_range]
-			-> bucket_range : Tuple<min_value, max_value>
-				-> min_value : int
-				-> max_value : int
+	:return : tuple<new_labels, buckets>
+		-> new_labels : list[one_hot_label]
+			-> one_hot_label : list[int]
+				these are the labels where 1 means it's in
+				bucket indicated by its index.
+		-> buckets : list[bucket]
+			-> bucket_range : tuple<min_value, max_value>
+				-> min_value : int (exclusive)
+				-> max_value : int (inclusive)
 	"""
-	raise NotImplementedError
+	assert len(labels) > buckets, \
+		"number of labels must be greater than the number of buckets " \
+		"otherwise this would be a one hot equivalent, which can be" \
+		"with a faster algorithm."
+	ordered_labels = sorted(labels)
+	count_per_bucket = len(labels) // buckets
+	bucket_map, last_point, current_bucket_number, count = {}, -1, 0, 0
+	final_buckets = []
+	for index, label in enumerate(ordered_labels):
+		# create a new list every time because these objects are the
+		# ones we will return. we don't want to cause any aliasing
+		# error.
+		bucket_map[label] = [1 if i == current_bucket_number else 0 for i in range(buckets)]
+		count += 1
+		next_label = ordered_labels[min(index + 1, len(ordered_labels) - 1)]
+		# (count >= count_per_bucket) ensures we have roughly equal
+		# number of label per bucket
+		# (current_bucket_number < buckets - 1) ensures we don't go
+		# beyond the last label
+		# (label != next_label) ensures all buckets have different
+		# labels in them
+		if (count >= count_per_bucket) and (current_bucket_number < buckets - 1) and (label != next_label):
+			count = 0
+			current_bucket_number += 1
+			final_buckets.append((last_point, label))
+			last_point = label
+	final_buckets.append((last_point, max(last_point, ordered_labels[-1])))
+	output_labels = []
+	for label in labels:
+		output_labels.append(bucket_map[label])
+	return output_labels, final_buckets
 
 
 def standardize_array(
