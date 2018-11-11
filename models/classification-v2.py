@@ -8,7 +8,7 @@ from typing import List, Tuple, Union
 
 class BinaryClassification(BaseModel):
 
-	def __init__(self, fb_reaction_index: int, cutoff: int = 20):
+	def __init__(self, fb_reaction_index: int, cutoff: int = 10):
 		"""
 		Creates a binary classifier that maps to the index given in
 		fb_reaction_index. this binary classifier will classify
@@ -49,8 +49,8 @@ class BinaryClassification(BaseModel):
 
 if __name__ == '__main__':
 	bc = BinaryClassification(data.data_util.FbReaction.LIKE_INDEX)
-	bc.run(save=False)
-	# bc.load()
+	# bc.run(save=True)
+	bc.load()
 	for t in [
 		"God damn it, I love you. Why do you have to be my ex's friend?",
 		"I'm a sophomore and I still don't know what Taylor series are.",
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 		print(bc.predict(d))
 		print()
 		# got these after training and predicting
-		# [[0.02407354]  expected 0
-		#  [0.9994462]   expected 1
-		#  [0.8864635]
-		#  [0.5478533]]
+		# [[0.00012126]  expected 0
+		#  [0.99985516]  expected 1
+		#  [0.01909499]
+		#  [0.39393654]]
