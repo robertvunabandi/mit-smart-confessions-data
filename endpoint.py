@@ -75,6 +75,8 @@ def get_lstm_model():
 def generate():
     # todo - should store the model inside LSTM_MODELS
     seed = request.args.get("seed")
+    length = request.args.get("length")
+    lstm_model = get_lstm_model()
     return seed + " here's a generated text!"
 
 
