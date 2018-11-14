@@ -15,8 +15,8 @@ class BucketClassification(BaseModel):
         everything greater than cutoff as 1 and everything below
         as 0.
         """
-        model_name = "bucket_classification_i%d_b%d" % (fb_reaction_index, buckets)
-        super(BucketClassification, self).__init__(model_name)
+        prefix = "%s_b%d" % ("all" if (fb_reaction_index == -1) else ("i%d" % fb_reaction_index), buckets)
+        super(BucketClassification, self).__init__("bucket_classification_%s" % prefix)
         self.fb_reaction_index = fb_reaction_index
         self.buckets = buckets
         self.bucket_ranges = None
@@ -56,9 +56,9 @@ class BucketClassification(BaseModel):
 
 
 if __name__ == '__main__':
-    bc = BucketClassification(-1)
-    # bc.run(save=True)
-    bc.load()
+    bc = BucketClassification(data.data_util.FbReaction.ANGRY_INDEX)
+    bc.run(save=True)
+    # bc.load()
     for t, expected in [
         ("Today is my birthday and no one remembered.", 63),
         ("AAAAAAHHHHHHH I LOVE MY SO SO FREAKIN MUCH HE IS LITERALLY THE BEST WOW I NEED TO APPRECIATE HIM MORE AND BE NICER BC HE DESERVES ONLY THE VERY BEST!!!!!", 13),
