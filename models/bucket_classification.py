@@ -57,7 +57,7 @@ class BucketClassification(BaseModel):
 
 if __name__ == '__main__':
     bc = BucketClassification(data.data_util.FbReaction.ANGRY_INDEX)
-    bc.run(save=True)
+    bc.run(save=False)
     # bc.load()
     for t, expected in [
         ("Today is my birthday and no one remembered.", 63),
