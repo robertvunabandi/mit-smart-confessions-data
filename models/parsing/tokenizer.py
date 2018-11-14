@@ -86,9 +86,10 @@ def find_max_sentence_length(sequences: list) -> int:
 def pad_data_sequences(
 	sequences: List[List[int]],
 	word_to_index: Dict[str, int],
-	max_sequence_length: int) -> np.ndarray:
+	max_sequence_length: int,
+	padding: str = "post") -> np.ndarray:
 	return pad_sequences(
-		sequences, value=word_to_index[PAD], maxlen=max_sequence_length, padding="post"
+		sequences, value=word_to_index[PAD], maxlen=max_sequence_length, padding=padding
 	)
 
 

@@ -160,7 +160,11 @@ class BaseModel:
             "test_data is None. The model may not have been trained. " \
             "Call the method `update_train_and_test_data` " \
             "on this instance of %s" % self.__class__.__name__
-        loss, metric = self.model.evaluate(self.test_data, self.test_labels)
+        evaluation = self.model.evaluate(self.test_data, self.test_labels)
+
+        if len(evaluation) == 0:
+            return None, None
+        loss, metric = evaluation
         return loss, metric
 
     def predict(self, data_point: np.ndarray) -> Any:
@@ -231,11 +235,14 @@ class BaseModel:
                 continue
             setattr(self, attr, model_metadata.get(attr, None))
 
-    def pad_sequences(self, sequences: List[List[int]]) -> np.ndarray:
+    def pad_sequences(self, sequences: List[List[int]], maxlen: int = None, padding: str = "post") -> np.ndarray:
+        if maxlen is None:
+            maxlen = self.max_sequence_length
         return models.parsing.tokenizer.pad_data_sequences(
             sequences,
             self.word_to_index,
-            self.max_sequence_length,
+            maxlen,
+            padding=padding
         )
 
     # **********************************
