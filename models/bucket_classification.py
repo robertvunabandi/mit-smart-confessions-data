@@ -59,7 +59,7 @@ if __name__ == '__main__':
     bc = BucketClassification(data.data_util.FbReaction.ANGRY_INDEX)
     bc.run(save=False)
     # bc.load()
-    for t, expected in [
+    for t, total_expected in [
         ("Today is my birthday and no one remembered.", 63),
         ("AAAAAAHHHHHHH I LOVE MY SO SO FREAKIN MUCH HE IS LITERALLY THE BEST WOW I NEED TO APPRECIATE HIM MORE AND BE NICER BC HE DESERVES ONLY THE VERY BEST!!!!!", 13),
         ("The SHPE president is soooo dreamy. Is he single?", 20),
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         probs = [prediction[0, i] for i in [max(0, index - 1), index, min(index + 1, len(bc.bucket_ranges) - 1)]]
         bucket = bc.bucket_ranges[index]
         print(t)
-        print(probs, bucket, "(expected %d)" % expected)
+        print(probs, bucket, "(total expected %d)" % total_expected)
         print()
     # got these after training and predicting
     # [[0.02407354]  expected 0
