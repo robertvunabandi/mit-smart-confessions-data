@@ -8,6 +8,7 @@ FLASK_APP=main.py flask run --host={some-host} --port={some-port}
 from flask import Flask, request
 
 from models.bucket_classification import BucketClassification
+import legacy_lstm_model
 
 import utils
 import constants
@@ -82,9 +83,9 @@ def get_lstm_model():
 def generate():
     # todo - should store the model inside LSTM_MODELS
     seed = request.args.get("seed")
-    length = request.args.get("length")
-    lstm_model = get_lstm_model()
-    return seed + " here's a generated text!"
+    length = int(request.args.get("length")) # todo: actually check whether this is an integer
+    output = legacy_lstm_model.generate_from_stored_model(seed, length)
+    return output
 
 
 # todo - hey Jurgen, could you add some comments about the __package__ is None check?
