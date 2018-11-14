@@ -17,7 +17,7 @@ PORT = 5000
 # cache the model into these variables to use them later
 # on.
 CLASSIFIER_MODELS = {}
-LSTM_MODELS = {}
+LSTM_MODEL = None
 
 ########
 # CODE #
@@ -64,8 +64,16 @@ def classify():
     return utils.make_string_json_valid(str(result))
 
 
+def get_lstm_model():
+    if LSTM_MODEL is None:
+        # todo - set LSTM_MODEL to load the model
+        pass
+    return LSTM_MODEL
+
+
 @app.route("/generate", methods=["GET"])
 def generate():
+    # todo - should store the model inside LSTM_MODELS
     seed = request.args.get("seed")
     return seed + " here's a generated text!"
 
