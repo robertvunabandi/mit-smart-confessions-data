@@ -1,3 +1,10 @@
+"""
+run with:
+FLASK_APP=main.py flask run
+
+or, to specify the host and port, run with:
+FLASK_APP=main.py flask run --host={some-host} --port={some-port}
+"""
 from flask import Flask, request
 
 from models.bucket_classification import BucketClassification
@@ -81,6 +88,7 @@ def generate():
 
 
 # todo - hey Jurgen, could you add some comments about the __package__ is None check?
+# todo - will need to not specify the host and port so that it runs in server
 if __name__ == "__main__" and __package__ is None:
     app.run(
         host=HOST,
