@@ -1,0 +1,42 @@
+FbReactions
+-----------
+["LIKE", "LOVE", "WOW", "HAHA", "SAD", "ANGRY", "COMMENTS"]
+
+Observations
+------------
+
+all reactions are polarized towards low frequencies. all except likes and comments
+are heavily polarized toward 0. below are fraction of reactions that have 0 to 10 likes:
+    - likes: [0.036, 0.049, 0.051, 0.054, 0.052, 0.045, 0.043, 0.042, 0.032, 0.031]
+        total: 0.4350
+    - loves: [0.704, 0.104, 0.052, 0.032, 0.022, 0.016, 0.012, 0.009, 0.007, 0.004]
+        total: 0.9262
+    - wows: [0.802, 0.094, 0.041, 0.022, 0.014, 0.006, 0.006, 0.005, 0.002, 0.001]
+        total: 0.9930
+    - hahas: [0.689, 0.06, 0.044, 0.038, 0.022, 0.02, 0.014, 0.013, 0.014, 0.012]
+        total: 0.9260
+    - sads: [0.852, 0.044, 0.023, 0.015, 0.01, 0.007, 0.006, 0.006, 0.004, 0.005]
+        total: 0.9720
+    - angrys: [0.948, 0.028, 0.009, 0.005, 0.002, 0.002, 0.001, 0.001, 0.001, 0.001]
+        total: 0.9980
+    - comments: [0.126, 0.152, 0.131, 0.115, 0.087, 0.061, 0.053, 0.046, 0.034, 0.022]
+        total: 0.8270
+
+Overall, about 60% of confessions get 0 reactions (including comments)
+Overall, about 67% of confessions get 0 reactions (excluding comments)
+
+Most confessions have about 50-150 characters
+One needs to have somewhere between 50-150 characters to maximize reactions
+
+
+Suggestions
+-----------
+
+(1) Remove many of the examples we have for reactions that are overly polarized
+    > that includes all except likes
+    > likes are moderately polarized, so we do need some balancing here
+(2) Duplicate sparse reactions:
+    > they will be seen more often during training that way.
+(3) Reduce the number of buckets when doing bucket classification:
+    > this will allow to box up many of the sparse data together
+    > this combined with (1) and (2) sounds promising
