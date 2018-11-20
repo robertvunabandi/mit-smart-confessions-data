@@ -256,6 +256,7 @@ def today() -> str:
 # *************
 # Other Methods
 # *************
+
 def make_string_json_valid(string) -> str:
     """
     converts the string into a valid JSON string — a string that
