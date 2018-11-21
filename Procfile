@@ -1,4 +1,4 @@
 worker: pip3 install -r requirements.txt
-worker: echo $HOST
-worker: echo $PORT
-web: FLASK_APP=main.py flask run
+web: echo $HOST
+web: echo $PORT
+web: FLASK_APP=main.py flask run --host=$HOST --port=$PORT
