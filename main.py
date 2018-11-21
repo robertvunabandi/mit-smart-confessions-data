@@ -5,13 +5,14 @@ FLASK_APP=main.py flask run
 or, to specify the host and port, run with:
 FLASK_APP=main.py flask run --host={some-host} --port={some-port}
 """
+import os
 from flask import Flask, request
-
-from models.bucket_classification import BucketClassification
-import legacy_lstm_model
 
 import utils
 import constants
+
+from models.bucket_classification import BucketClassification
+import legacy_lstm_model
 
 
 ###########
@@ -24,6 +25,8 @@ import constants
 # on.
 CLASSIFIER_MODELS = {}
 LSTM_MODEL = None
+HOST = os.getenv("HOST", "0.0.0.0.")
+PORT = os.getenv("HOST", 5000)
 
 ########
 # CODE #
@@ -81,7 +84,7 @@ def get_lstm_model():
 def generate():
     # todo - should store the model inside LSTM_MODELS
     seed = request.args.get("seed")
-    length = int(request.args.get("length")) # todo: actually check whether this is an integer
+    length = int(request.args.get("length"))  # todo: actually check whether this is an integer
     output = legacy_lstm_model.generate_from_stored_model(seed, length)
     return output
 
@@ -90,6 +93,8 @@ def generate():
 # todo - will need to not specify the host and port so that it runs in server
 if __name__ == "__main__" and __package__ is None:
     app.run(
-        debug=True,  # automatic reloading enabled
-        threaded=False,
+            host=HOST,
+            debug=True,  # automatic reloading enabled
+            threaded=False,
+            port=PORT,
     )
