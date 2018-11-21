@@ -18,8 +18,6 @@ import constants
 # GLOBALS #
 ###########
 
-HOST = "0.0.0.0"
-PORT = 5000
 # the following are not really constants, but they are
 # global variables. whenever we load a model, it will
 # cache the model into these variables to use them later
@@ -92,8 +90,6 @@ def generate():
 # todo - will need to not specify the host and port so that it runs in server
 if __name__ == "__main__" and __package__ is None:
     app.run(
-        host=HOST,
         debug=True,  # automatic reloading enabled
-        port=PORT,
         threaded=False,
     )
