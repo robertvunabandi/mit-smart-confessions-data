@@ -24,10 +24,10 @@ ADDITIONAL_WORDS = []
 # ******************************************
 
 
-def get_text_items(text_array: List[str]) -> Tuple:
+def get_text_items(text_array: List[str]) -> Tuple[List[List[int]], int, Dict[int, str], Dict[str, int]]:
     """
     :param text_array : list[str]
-    :return Tokenizer
+    :return Tuple<List[List[int]], int, Dict[int, str], Dict[str, int]>
     """
     tokenizer = Tokenizer(filters=FILTERS, split=" ")
     tokenizer.fit_on_texts(list(text_array) + ["".join(ADDITIONAL_WORDS)])
