@@ -13,11 +13,12 @@ import sys
 from tensorflow import set_random_seed
 from numpy.random import seed
 
+EPOCHS = 2
+
 MODEL_FILE = 'models/storage/legacy_lstm_100_400.h5'
 set_random_seed(2)
 seed(1)
 
-import pandas as pd
 import numpy as np
 import string, os
 
@@ -29,6 +30,8 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 def generate_from_stored_model(seed_text, next_words):
     text_list = load_mit_confessions()
     model = load_model(MODEL_FILE)
+    s = model.summary()
+    print(s)
     return generate(text_list, model, seed_text, next_words)
 
 
@@ -40,7 +43,7 @@ def generate(text_list, model=None, seed_text=None, next_words=None):
     # only fit if it does not exist
     if model is None:
         model = create_model(max_sequence_len, total_words)
-        model.fit(predictors, label, epochs=100, verbose=2)
+        model.fit(predictors, label, epochs=EPOCHS, verbose=1)
         model.save(MODEL_FILE)
 
     if seed_text is None or next_words is None:
@@ -74,6 +77,8 @@ def generate_padded_sequences(input_sequences, total_words):
     input_sequences = np.array(pad_sequences(input_sequences, maxlen=max_sequence_len, padding='pre'))
 
     predictors, label = input_sequences[:,:-1],input_sequences[:,-1]
+    print(predictors)
+    print(label)
     label = ku.to_categorical(label, num_classes=total_words)
     return predictors, label, max_sequence_len
 
@@ -115,8 +120,10 @@ def generate_text(tokenizer, seed_text, next_words, model, max_sequence_len):
         token_list = tokenizer.texts_to_sequences([seed_text])[0]
         token_list = pad_sequences([token_list], maxlen=max_sequence_len-1, padding='pre')
         predicted = model.predict_classes(token_list, verbose=0)
+        print(token_list)
+        print(predicted)
 
-        output_word = ""
+        #output_word = tokenizer.word_index[predicted]
         for word,index in tokenizer.word_index.items():
             if index == predicted:
                 output_word = word
@@ -180,18 +187,18 @@ def load_mit_confessions(cutoff_length=400):
     return [s for s in m if len(s) < cutoff_length]
 
 
-def load_kaggle_data():
-    article_df = pd.read_csv('data/nyt.csv')
-    return list(article_df.headline.values)
 
 
 if __name__ == '__main__':
     #generate(text_list)
-    if len(sys.argv) < 3:
-        print("Usage: " + sys.argv[0] + " seed_text num_words")
-        exit()
-    seed_text = sys.argv[1]
-    num_words = int(sys.argv[2])
+    #if len(sys.argv) < 3:
+    #    print("Usage: " + sys.argv[0] + " seed_text num_words")
+    #    exit()
+    #seed_text = sys.argv[1]
+    #num_words = int(sys.argv[2])
+
+    seed_text, num_words = "Anime girls are better than real girls who is with us anime lovers", 20
 
     output = generate_from_stored_model(seed_text, num_words)
+    #output = generate(load_mit_confessions())
     print(output)
