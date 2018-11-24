@@ -141,12 +141,6 @@ def bucketize_labels(
 		bucket_map[label] = [1 if i == current_bucket_number else 0 for i in range(buckets)]
 		count += 1
 		next_label = ordered_labels[min(index + 1, len(ordered_labels) - 1)]
-		# (count >= count_per_bucket) ensures we have roughly equal
-		# number of label per bucket
-		# (current_bucket_number < buckets - 1) ensures we don't go
-		# beyond the last label
-		# (label != next_label) ensures all buckets have different
-		# labels in them
 		if (count >= count_per_bucket) and (current_bucket_number < buckets - 1) and (label != next_label):
 			count = 0
 			current_bucket_number += 1
