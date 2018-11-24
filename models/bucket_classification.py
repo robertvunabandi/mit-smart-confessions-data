@@ -36,8 +36,15 @@ class BucketClassification(BaseModel):
             index_labels = [label[self.fb_reaction_index] for label in labels]
         else:
             index_labels = [sum(label[:-1]) for label in labels]
-        new_labels, self.bucket_ranges = data.data_util.bucketize_labels(index_labels, self.buckets)
-        return padded,  np.array(new_labels)
+        new_labels, self.bucket_ranges, b_frequencies = data.data_util.bucketize_labels(
+                index_labels,
+                self.buckets
+        )
+        print(
+                "parse_base_data::Bucket Frequencies::\n\n"
+                "%s" % data.data_util.stringify_bucket_frequencies(b_frequencies)
+        )
+        return padded, np.array(new_labels)
 
     def create(self) -> None:
         embedding_size = self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE)
@@ -61,21 +68,28 @@ if __name__ == '__main__':
     # bc.load()
     for t, total_expected in [
         ("Today is my birthday and no one remembered.", 63),
-        ("AAAAAAHHHHHHH I LOVE MY SO SO FREAKIN MUCH HE IS LITERALLY THE BEST WOW I NEED TO APPRECIATE HIM MORE AND BE NICER BC HE DESERVES ONLY THE VERY BEST!!!!!", 13),
+        (
+        "AAAAAAHHHHHHH I LOVE MY SO SO FREAKIN MUCH HE IS LITERALLY THE BEST WOW I NEED TO APPRECIATE HIM MORE AND BE NICER BC HE DESERVES ONLY THE VERY BEST!!!!!",
+        13),
         ("The SHPE president is soooo dreamy. Is he single?", 20),
-        ("to the girl in the gym the other eve that got really excited and ran over to the window and waved at one of the guys on the pool deck, that was super duper cute and i support yall", 4),
+        (
+        "to the girl in the gym the other eve that got really excited and ran over to the window and waved at one of the guys on the pool deck, that was super duper cute and i support yall",
+        4),
         ("I have someone back home and here. I'm in love with both of them", 7),
-        ("Mohammed Nasir and Ji Min Lee are the best most wholesome confessions commenters change my mind", 19),
-        ("I bet all the people who said “go vote!” before the midterm elections would regret encouraging me when they found out I voted republican.", 46),
+        ("Mohammed Nasir and Ji Min Lee are the best most wholesome confessions commenters change my mind",
+         19),
+        (
+        "I bet all the people who said “go vote!” before the midterm elections would regret encouraging me when they found out I voted republican.",
+        46),
         ("where did daniel's hair go?!", 1),
         ("What if MIT Confessions is run by the GOD Eric Lander himself?? Function. Gene. Protein.", 55),
         ("Raise your hand if you've ever felt personally victimized by Ben Bitdiddle", 139),
     ]:
-
         d = bc.convert_text_to_padded_sequence(t)
         prediction = bc.predict(d)
         index = np.argmax(prediction, axis=1)[0]
-        probs = [prediction[0, i] for i in [max(0, index - 1), index, min(index + 1, len(bc.bucket_ranges) - 1)]]
+        probs = [prediction[0, i] for i in
+                 [max(0, index - 1), index, min(index + 1, len(bc.bucket_ranges) - 1)]]
         bucket = bc.bucket_ranges[index]
         print(t)
         print(probs, bucket, "(total expected %d)" % total_expected)
