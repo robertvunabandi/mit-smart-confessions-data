@@ -187,17 +187,17 @@ def standardize_array(
     raise TypeError("array must be either a list of numbers or a numpy array")
 
 
-def depolarize_data(labels: List[Union[int, float]], max_prob_threshold: float = 1.0) -> List[Union[int, float]]:
+def depolarize_data(labels: List[Union[int, float]]) -> List[Tuple[int, Union[int, float]]]:
     """
     systematically depolarize the data by slightly reducing the labels that
     are very polarized and slightly duplicating the sparse ones.
     """
-    label_multipliers = _get_depolarizing_multiplier_map(labels, max_prob_threshold=max_prob_threshold)
+    label_multipliers = _get_depolarizing_multiplier_map(labels, max_prob_threshold=0.5)
     new_labels = []
-    for label in labels:
+    for index, label in enumerate(labels):
         multiplier = label_multipliers[label]
-        if multiplier % 1.0 == 0.0:
-            new_labels.append(label)
+        if multiplier == 1.0:
+            new_labels.append((index, label))
             continue
         prob = multiplier % 1.0
         # we need to iterate at least twice because this led to the data
@@ -205,7 +205,7 @@ def depolarize_data(labels: List[Union[int, float]], max_prob_threshold: float =
         # what it was before. also, x // 1 = 0 for all x in [0, 1)
         for _ in range(max(int(multiplier // 1), 2)):
             if random.random() < prob:
-                new_labels.append(label)
+                new_labels.append((index, label))
     return new_labels
 
 
@@ -315,7 +315,7 @@ def _get_depolarizing_multiplier(prob: float, max_prob: float) -> float:
         return 1.0
     f = lambda x: (-0.5 * (max_prob ** 4) * ((x + 1) ** 2)) + 2.14 * max_prob
     g = lambda x: 0.5 * math.e ** ((1 + max_prob) ** 1.4 - ((15/max_prob**2) * x ** 2))
-    return f(prob) + g(prob)
+    return f(prob) + g(prob) * (1 if max_prob > 0.65 else 0)
 
 
 if __name__ == '__main__':
@@ -324,20 +324,20 @@ if __name__ == '__main__':
         load_text_with_every_label("all_confessions/all")
     ]
     labels_list = [[label[label_index] for label in all_labels] for label_index in range(7)]
-    for labels in labels_list:
+    for labels_ in labels_list:
         print("-----")
         print("before")
-        print("COUNT: %d" % len(labels))
+        print("COUNT: %d" % len(labels_))
         before_labels = sorted([
             (label, round(prob, 3))
-            for label, prob in _get_label_distribution(labels).items()
+            for label, prob in _get_label_distribution(labels_).items()
         ], key=lambda tup: tup[0])
         print(before_labels)
         print("after")
-        new_labels = depolarize_data(labels, max_prob_threshold=0.5)
-        print("COUNT: %d" % len(new_labels))
+        new_labels_ = [label for index, label in depolarize_data(labels_)]
+        print("COUNT: %d" % len(new_labels_))
         after_labels = sorted([
             (label, round(prob, 3))
-            for label, prob in _get_label_distribution(new_labels).items()
+            for label, prob in _get_label_distribution(new_labels_).items()
         ], key=lambda tup: tup[0])
         print(after_labels)
