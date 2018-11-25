@@ -1,6 +1,8 @@
 import json
 import re
 import os
+import random
+import math
 
 from typing import Tuple, List, Dict, Any, NewType, Union
 import numpy as np
@@ -185,6 +187,28 @@ def standardize_array(
     raise TypeError("array must be either a list of numbers or a numpy array")
 
 
+def depolarize_data(labels: List[Union[int, float]], max_prob_threshold: float = 1.0) -> List[Union[int, float]]:
+    """
+    systematically depolarize the data by slightly reducing the labels that
+    are very polarized and slightly duplicating the sparse ones.
+    """
+    label_multipliers = _get_depolarizing_multiplier_map(labels, max_prob_threshold=max_prob_threshold)
+    new_labels = []
+    for label in labels:
+        multiplier = label_multipliers[label]
+        if multiplier % 1.0 == 0.0:
+            new_labels.append(label)
+            continue
+        prob = multiplier % 1.0
+        # we need to iterate at least twice because this led to the data
+        # not being depolarized in such a way that it doesn't look like
+        # what it was before. also, x // 1 = 0 for all x in [0, 1)
+        for _ in range(max(int(multiplier // 1), 2)):
+            if random.random() < prob:
+                new_labels.append(label)
+    return new_labels
+
+
 # ************************************
 # Private Methods To Be Used Here Only
 # ************************************
@@ -243,3 +267,77 @@ def _get_labels(post_obj: dict) -> Tuple[FbReactionCount, ...]:
     return tuple(
             [post_obj.get("reactions", {}).get(fb_type, 0) for fb_type in FB_REACTIONS] + [comment_count]
     )
+
+
+def _get_depolarizing_multiplier_map(
+        labels: List[Union[int, float]],
+        max_prob_threshold: float = 0.5) -> Dict[Union[int, float], float]:
+    """
+    for each label, get a multiplier such that we get a multiplier. this
+    number is a number such that multiplier % 1 gives us a probability
+    and for each multiplier // 1, we duplicate the data.
+    :return : list[tuple<label, multiplier>]
+        -> multiplier: float (in range [0, infinity])
+    """
+    label_dist = _get_label_distribution(labels)
+    max_prob = max(label_dist.values())
+    # we do not want to depolarize the data if the data is not polar.
+    # returning a multiplier of 1 means we're allowing all the data
+    # to just be represented.
+    if max_prob <= max_prob_threshold:
+        return {label: 1 for label, prob in label_dist.items()}
+    return {label: _get_depolarizing_multiplier(prob, max_prob) for label, prob in label_dist.items()}
+
+
+def _get_label_distribution(labels: List[Union[int, float]]) -> Dict[Union[int, float], float]:
+    """
+    returns the distribution of the labels as a key value pair
+    where the key is the label and the value is the distribution
+    """
+    count_map, total = {}, 0
+    for label in labels:
+        count_map[label], total = count_map.get(label, 0) + 1, total + 1
+    dist = {}
+    for label, count in count_map.items():
+        dist[label] = (count / total)
+    return dist
+
+
+def _get_depolarizing_multiplier(prob: float, max_prob: float) -> float:
+    """
+    The functions below are chosen in such a way that low values of of prob
+    get a high multiplier and high values of prob get a low multiplier. This
+    multiplier scales with how much a data is multiplied (or lost).
+    This is hard to explain, please see the desmos graph:
+    https://www.desmos.com/calculator/q4d9f0gcyr
+    """
+    if max_prob <= 0.5:
+        return 1.0
+    f = lambda x: (-0.5 * (max_prob ** 4) * ((x + 1) ** 2)) + 2.14 * max_prob
+    g = lambda x: 0.5 * math.e ** ((1 + max_prob) ** 1.4 - ((15/max_prob**2) * x ** 2))
+    return f(prob) + g(prob)
+
+
+if __name__ == '__main__':
+    all_labels = [
+        label[CONFESSION_REACTION_INDEX] for label in
+        load_text_with_every_label("all_confessions/all")
+    ]
+    labels_list = [[label[label_index] for label in all_labels] for label_index in range(7)]
+    for labels in labels_list:
+        print("-----")
+        print("before")
+        print("COUNT: %d" % len(labels))
+        before_labels = sorted([
+            (label, round(prob, 3))
+            for label, prob in _get_label_distribution(labels).items()
+        ], key=lambda tup: tup[0])
+        print(before_labels)
+        print("after")
+        new_labels = depolarize_data(labels, max_prob_threshold=0.5)
+        print("COUNT: %d" % len(new_labels))
+        after_labels = sorted([
+            (label, round(prob, 3))
+            for label, prob in _get_label_distribution(new_labels).items()
+        ], key=lambda tup: tup[0])
+        print(after_labels)
