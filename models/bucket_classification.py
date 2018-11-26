@@ -8,15 +8,16 @@ from typing import List, Tuple, Union
 
 class BucketClassification(BaseModel):
 
-    def __init__(self, fb_reaction_index: int, buckets: int = 25):
+    def __init__(self, fb_reaction_index: int, buckets: int = 25, should_depolarize: bool = False):
         """
         Creates a binary classifier that maps to the index given in
         fb_reaction_index. this binary classifier will classify
         everything greater than cutoff as 1 and everything below
         as 0.
         """
-        prefix = "%s_b%d" % ("all" if (fb_reaction_index == -1) else ("i%d" % fb_reaction_index), buckets)
-        super(BucketClassification, self).__init__("bucket_classification_%s" % prefix)
+        suffix = "%s_b%d" % ("all" if (fb_reaction_index == -1) else ("i%d" % fb_reaction_index), buckets)
+        depol_suffix = "_depol" if should_depolarize else ""
+        super(BucketClassification, self).__init__("bucket_classification_%s%s" % (suffix, depol_suffix))
         self.fb_reaction_index = fb_reaction_index
         self.buckets = buckets
         self.bucket_ranges = None
@@ -26,18 +27,28 @@ class BucketClassification(BaseModel):
         self.set_hyperparam(BaseModel.KEY_EPOCHS, 50)
         self.set_hyperparam(BaseModel.KEY_BATCH_SIZE, 64)
         self.set_hyperparam(BaseModel.KEY_EMBEDDING_SIZE, 32)
+        self.set_hyperparam(BaseModel.KEY_DEPOLARIZE, should_depolarize)
 
     def parse_base_data(
             self,
             sequences: List[List[int]],
-            labels: Tuple[Union[int, float], ...]) -> Tuple[np.ndarray, np.ndarray]:
-        padded = self.pad_sequences(sequences)
+            labels: List[Union[int, float]]) -> Tuple[np.ndarray, np.ndarray]:
+
         if self.fb_reaction_index != -1:
             index_labels = [label[self.fb_reaction_index] for label in labels]
         else:
             index_labels = [sum(label[:-1]) for label in labels]
+        depol_label_with_indices = data.data_util.depolarize_data(index_labels)
+        should_depolarize = self.get_hyperparam(BaseModel.KEY_DEPOLARIZE)
+        depol_sequences = [sequences[index] for index, _ in depol_label_with_indices] \
+            if should_depolarize \
+            else sequences
+        depol_labels = [index_labels[index] for index, _ in depol_label_with_indices] \
+            if should_depolarize \
+            else index_labels
+        padded = self.pad_sequences(depol_sequences)
         new_labels, self.bucket_ranges, b_frequencies = data.data_util.bucketize_labels(
-                index_labels,
+                depol_labels,
                 self.buckets
         )
         print(
@@ -63,7 +74,7 @@ class BucketClassification(BaseModel):
 
 
 if __name__ == '__main__':
-    bc = BucketClassification(data.data_util.FbReaction.ANGRY_INDEX)
+    bc = BucketClassification(data.data_util.FbReaction.LOVE_INDEX, buckets=25, should_depolarize=True)
     bc.run(save=False)
     # bc.load()
     for t, total_expected in [
@@ -87,15 +98,29 @@ if __name__ == '__main__':
     ]:
         d = bc.convert_text_to_padded_sequence(t)
         prediction = bc.predict(d)
-        index = np.argmax(prediction, axis=1)[0]
+        index_ = np.argmax(prediction, axis=1)[0]
         probs = [prediction[0, i] for i in
-                 [max(0, index - 1), index, min(index + 1, len(bc.bucket_ranges) - 1)]]
-        bucket = bc.bucket_ranges[index]
+                 [max(0, index_ - 1), index_, min(index_ + 1, len(bc.bucket_ranges) - 1)]]
+        bucket = bc.bucket_ranges[index_]
         print(t)
         print(probs, bucket, "(total expected %d)" % total_expected)
         print()
-    # got these after training and predicting
-    # [[0.02407354]  expected 0
-    #  [0.9994462]   expected 1
-    #  [0.8864635]
-    #  [0.5478533]]
+    # without depolarizing: loss: 0.0022 - acc: 0.9988 - val_loss: 0.1666 - val_acc: 0.9736
+    # (-1.000, 0.000): 2784
+    # (0.000, 1.000): 424
+    # (1.000, 2.000): 205
+    # (2.000, 4.000): 197
+    # (4.000, 8.000): 164
+    # (8.000, 46.000): 144
+    # with depolarizing: loss: 0.0071 - acc: 0.9964 - val_loss: 0.0877 - val_acc: 0.9778
+    # (-1.000, 0.000): 815
+    # (0.000, 1.000): 507
+    # (1.000, 2.000): 233
+    # (2.000, 3.000): 267
+    # (3.000, 4.000): 191
+    # (4.000, 5.000): 173
+    # (5.000, 7.000): 205
+    # (7.000, 10.000): 152
+    # (10.000, 13.000): 138
+    # (13.000, 21.000): 124
+    # (21.000, 46.000): 60

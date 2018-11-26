@@ -16,6 +16,7 @@ class BaseModel:
     KEY_EMBEDDING_SIZE = "embedding_size"
     KEY_MAX_CONFESSION_LENGTH = "max_confession_length"
     KEY_DATA_PATH = "data_path"
+    KEY_DEPOLARIZE = "should_depolarize_data"
     DEFAULT_HYPERPARAMETER_VALUE_MAP = {
         "test_split": 0.20,
         "epochs": 100,
@@ -24,6 +25,7 @@ class BaseModel:
         "embedding_size": 16,
         "max_confession_length": 400,
         "data_path": "all_confessions/all",
+        "should_depolarize_data": False,
     }
 
     def __init__(self, model_type_name: str):
