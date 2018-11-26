@@ -1,6 +1,8 @@
 import data.data_util
 import models.parsing.tokenizer as text_tokenizer
 import models.storage.store as model_store
+import keras.models
+import numpy as np
 from keras import Sequential, Model, layers, optimizers
 from typing import List
 from models.plotting.plot import plot_classification_history, plot_prediction
@@ -17,7 +19,7 @@ VALIDATION_SPLIT = 0.33
 # https://www.tensorflow.org/tutorials/keras/basic_text_classification
 
 
-def create_classifier_model(number_of_words: int, input_length: int, output_neurons: int = 1) -> Model:
+def create_keras_classifier_model(number_of_words: int, input_length: int, output_neurons: int = 1) -> Model:
 	"""
 	:param number_of_words : int
 	:param input_length : int
@@ -55,7 +57,7 @@ def run_binary_classifier_model(index: int) -> Model:
 	sequences, num_words, index_to_word, word_to_index = text_tokenizer.get_text_items(texts)
 	train_data, train_labels, test_data, test_labels, max_sequence_length = \
 		text_tokenizer.split_dataset(sequences, binary_labels, word_to_index)
-	model = create_classifier_model(num_words, max_sequence_length)
+	model = create_keras_classifier_model(num_words, max_sequence_length)
 	history = model.fit(
 		train_data,
 		train_labels,
@@ -64,6 +66,7 @@ def run_binary_classifier_model(index: int) -> Model:
 		validation_split=VALIDATION_SPLIT,
 		verbose=1,
 	)
+	print(test_data.shape, test_labels.shape)
 	loss, accuracy = model.evaluate(test_data, test_labels)
 	print("test set results: loss: %f, accuracy: %f" % (loss, accuracy))
 	plot_classification_history(history)
@@ -80,6 +83,19 @@ def run_binary_classifier_model(index: int) -> Model:
 	return model
 
 
+def load_model(model_path: str, index: int) -> tuple:
+	texts, like_labels = data.data_util.load_text_with_specific_label(
+		DEFAULT_FILE_NAME,
+		index
+	)
+	binary_labels = create_binary_labels_for_classification(like_labels, 20)
+	sequences, num_words, index_to_word, word_to_index = text_tokenizer.get_text_items(texts)
+	_, _, _, _, max_sequence_length = \
+		text_tokenizer.split_dataset(sequences, binary_labels, word_to_index)
+	model = keras.models.load_model(model_path)
+	return model, word_to_index, index_to_word, max_sequence_length
+
+
 def create_binary_labels_for_classification(labels: List[int], cut_off: int = 20) -> List[int]:
 	"""
 	label everything below {cut_off} as 0 and anything above as 1.
@@ -91,4 +107,27 @@ def create_binary_labels_for_classification(labels: List[int], cut_off: int = 20
 
 
 if __name__ == "__main__":
-	bin_model = run_binary_classifier_model(data.data_util.FbReaction.LIKE_INDEX)
+	INDEX = data.data_util.FbReaction.LIKE_INDEX
+	bin_model = run_binary_classifier_model(INDEX)
+	if False:
+		raise Exception("stop")
+	model_path = model_store.get_model_title(
+		"binary_classification_index_%d" % INDEX,
+		EMBEDDING_SIZE,
+		EPOCHS,
+		BATCH_SIZE,
+		VALIDATION_SPLIT,
+	)
+	print(model_path)
+	bin_model_load, wti, itw, max_seq_length = load_model(model_path, INDEX)
+	ex_sentences = [
+		"tag the people you met this year who've made your 2017 better <3",
+		"The word of the day is WHOLESOME. Tag your WHOLESOME friends on this WHOLESOME confession!",
+		"I think I\u2019m in love with my roommate",
+		"I've never been asked out in my life, and it makes me feel like there's something terribly wrong with me. I just want a sweet, nerdy guy to notice me.",
+		"How many asian guy, white girl couples are there at MIT?",
+	]
+	expected = np.array([[1, 1, 1, 0, 0]]).T
+	ex_sequences = [text_tokenizer.convert_text_to_sequence(text, wti) for text in ex_sentences]
+	padded_seqs = text_tokenizer.pad_data_sequences(ex_sequences, wti, max_seq_length)
+	print(np.hstack((bin_model_load.predict(padded_seqs), expected)))
