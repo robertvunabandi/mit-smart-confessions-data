@@ -10,19 +10,23 @@ from typing import List, Tuple, Union
 class LSTMGenerator(BaseModel):
     HIDDEN_NEURONS = 100
 
-    def __init__(self):
+    def __init__(self, popularity_threshold: int = None):
         """
         Creates a binary classifier that maps to the index given in
         fb_reaction_index. this binary classifier will classify
         everything greater than cutoff as 1 and everything below
         as 0.
         """
-        super(LSTMGenerator, self).__init__("lstm_generator")
+        suffix = "" if popularity_threshold is None else "pt_%d" % popularity_threshold
+        super(LSTMGenerator, self).__init__("lstm_generator%s" % suffix)
+        self.popularity_threshold = popularity_threshold
+        self.register_metadata("popularity_threshold")
         self.set_hyperparam(BaseModel.KEY_EPOCHS, 100)  # ~10m/epoch => ~16.67hrs
         self.set_hyperparam(BaseModel.KEY_BATCH_SIZE, 32)
         self.set_hyperparam(BaseModel.KEY_EMBEDDING_SIZE, 300)
         self.set_hyperparam(BaseModel.KEY_TEST_SPLIT, 0.0)
         self.set_hyperparam(BaseModel.KEY_VALIDATION_SPLIT, 0.05)
+        self.set_hyperparam(BaseModel.KEY_MAX_CONFESSION_LENGTH, 600)
 
     def create(self) -> None:
         embedding_size = self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE)
@@ -42,13 +46,27 @@ class LSTMGenerator(BaseModel):
     def parse_base_data(
             self,
             sequences: List[List[int]],
-            labels: Tuple[Union[int, float], ...]) -> Tuple[np.ndarray, np.ndarray]:
+            labels: List[Tuple[Union[int, float], ...]]) -> Tuple[np.ndarray, np.ndarray]:
         """ create new sequences (from subsequences) then create labels with them """
-        input_sequences = LSTMGenerator.get_lstm_sequences(sequences)
+        sequences_over_threshold = \
+            LSTMGenerator.get_sequences_over_threshold(sequences, labels, self.popularity_threshold)
+        input_sequences = LSTMGenerator.get_lstm_sequences(sequences_over_threshold)
         padded = self.pad_sequences(input_sequences, padding="pre")
         train_data, new_labels = padded[:, :-1], padded[:, -1]
         new_labels = ku.to_categorical(new_labels, num_classes=self.num_words)
         return train_data, new_labels
+
+    @staticmethod
+    def get_sequences_over_threshold(
+            sequences: List[List[int]],
+            labels: List[Tuple[Union[int, float], ...]],
+            threshold: int = None,
+    ) -> List[List[int]]:
+        """ return only the sequences that have more than {threshold} reactions """
+        if threshold is None:
+            return sequences
+        reaction_counts = [sum(label) for label in labels]
+        return [sequence for sequence, rxn_count in zip(sequences, reaction_counts) if rxn_count >= threshold]
 
     @staticmethod
     def get_lstm_sequences(sequences: List[List[int]]) -> List[List[int]]:
@@ -87,7 +105,7 @@ class LSTMGenerator(BaseModel):
 
 
 if __name__ == "__main__":
-    generator = LSTMGenerator()
+    generator = LSTMGenerator(popularity_threshold=40)
     generator.run(save=True)
     # generator.load()
     examples = [("Anime girls are better than real girls who is with us anime lovers", 20)]
