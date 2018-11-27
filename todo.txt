@@ -1,1 +1,2 @@
 - Move unused models into a "legacy" or "unused" folder within /models
+- Collect more data from: mit confessions (more confessions have been posted), mit timely confessions, mit summer confessions.
