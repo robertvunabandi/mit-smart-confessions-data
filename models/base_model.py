@@ -283,11 +283,6 @@ class BaseModel:
         given all the texts and labels, convert them into
         numpy arrays of training data and labels.
         use self.pad_sequences with sequences to pad
-        todo - seems like most modifications are needed only on the labels
-            -> so maybe just create a method that changes the labels or
-            -> create a method that pads the sequences? however, the
-            -> padding for lstm is different so we need to take that into
-            -> consideration
         """
         raise NotImplementedError
 
