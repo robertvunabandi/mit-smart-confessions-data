@@ -8,6 +8,7 @@ MIT Smart Confessions is a platform that uses machine learning to predict the nu
 The website for this application can be found [here](https://mit-smart-confessions.herokuapp.com), and the Github repository for the website can be found [here](https://github.com/robertvunabandi/mit-smart-confessions-website).
 
 [![MIT Smart Confession Logo](assets/msc-logo.png)](https://mit-smart-confessions.herokuapp.com)
+
 ## Installation
 
 ### Python Version: 3.6.x
@@ -66,6 +67,25 @@ pip3 freeze > requirements.txt
 
 * `pip3 freeze` lists all the packages currently installed in the environment
 * `> requirements.txt` dumps that list into the `requirements.txt` file. 
+
+## Running This
+
+It is recommended that you use [JetBrains' PyCharm IDE](https://www.jetbrains.com/pycharm/). If you prefer using your terminal, make sure that you set `PYTHONPATH` to be the root directory (i.e. where the `main.py` is located).
+
+For instance, if running the `bucket_classification.py` model, you should run:
+
+```bash
+PYTHONPATH=.. python3 bucket_classification.py
+```
+
+It is easier to just set `PYTHONPATH` to the root directory (so that you don't have to write `PYTHONPATH=..` every time) by running this in the root directory:
+
+```bash
+cd mit-smart-confessions-api
+PYTHONPATH=$PWD
+```
+
+IF you're not familiar with UNIX, `pwd` stands for `print working directory`. This working directory is placed into the variable `PWD`, which is changed every time you `cd` (change directory) into a directory: `PWD` becomes the path to the directory you `cd`'ed into. So, if you go into the root directory, `$PWD` will point to it. 
 
 ## Data Collection
 
