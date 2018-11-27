@@ -5,8 +5,15 @@ import numpy as np
 import utils
 
 
-# words to filter out of the strings
-FILTERS = '!"#$%&()*+,-./:;<=>?@[\]^_`{|}~	'
+# words to filter out of the strings, these are base filters which
+# are updated below
+FILTERS = '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n'
+PUNCTUATION_FILTERS = "!?.,;"
+NON_FILTERS = "-_"
+# remove punctuation and non-filters from the base filters
+FILTERS = utils.Str.remove_chars_from_string(FILTERS, PUNCTUATION_FILTERS)
+FILTERS = utils.Str.remove_chars_from_string(FILTERS, NON_FILTERS)
+# additional characters we need in our vocabulary
 PAD, START, UNKNOWN, UNUSED, END = "<PAD>", "<START>", "<UNK>", "<UNUSED>", "<END>"
 # todo - figure out whether we want/need to use this or not
 # additional words to add to the tokenizer
@@ -24,17 +31,21 @@ ADDITIONAL_WORDS = []
 # ******************************************
 
 
-def get_text_items(text_array: List[str]) -> Tuple[List[List[int]], int, Dict[int, str], Dict[str, int]]:
+def get_text_items(sentences: List[str]) -> Tuple[List[List[int]], int, Dict[int, str], Dict[str, int]]:
     """
-    :param text_array : list[str]
+    :param sentences : list[str]
     :return Tuple<List[List[int]], int, Dict[int, str], Dict[str, int]>
     """
     tokenizer = Tokenizer(filters=FILTERS, split=" ")
-    tokenizer.fit_on_texts(list(text_array) + ["".join(ADDITIONAL_WORDS)])
+    new_sentences = [
+        utils.Str.put_spaces_around_punctuations(sentence, char_punctuations=PUNCTUATION_FILTERS)
+        for sentence in sentences
+    ]
+    tokenizer.fit_on_texts(list(new_sentences) + ["".join(ADDITIONAL_WORDS)])
     index_to_word, word_to_index = _word_index_maps(tokenizer)
     num_words = len(word_to_index)
     sequences = _update_sequences_with_new_word_index_map(
-            tokenizer.texts_to_sequences(text_array),
+            tokenizer.texts_to_sequences(new_sentences),
             tokenizer.index_word,
             word_to_index,
     )
@@ -99,7 +110,8 @@ def convert_text_to_sequence(text: str, word_to_index: Dict[str, int]) -> list:
     :param word_to_index : dict<str, int>
     :return list[int]
     """
-    words = utils.Str.extract_words_from_text_with_filters(text, FILTERS)
+    punctuated_sentence = utils.Str.put_spaces_around_punctuations(text, char_punctuations=PUNCTUATION_FILTERS)
+    words = utils.Str.extract_words_from_text_with_filters(punctuated_sentence, FILTERS)
     return [word_to_index.get(word, word_to_index[UNKNOWN]) for word in words]
 
 
@@ -109,7 +121,8 @@ def convert_sequence_to_text(sequence: List[int], index_to_word: Dict[int, str])
     :param index_to_word : dict<int, str>
     :return str
     """
-    return " ".join([index_to_word.get(index, UNKNOWN) for index in sequence])
+    output_text = " ".join([index_to_word.get(index, UNKNOWN) for index in sequence])
+    return utils.Str.remove_spaces_around_punctuations(output_text, PUNCTUATION_FILTERS)
 
 
 # ************************************
