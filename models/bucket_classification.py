@@ -48,7 +48,7 @@ class BucketClassification(BaseModel):
         self.register_metadata("fb_reaction_index")
         self.register_metadata("buckets")
         self.register_metadata("bucket_ranges")
-        self.set_hyperparam(BaseModel.KEY_EPOCHS, 50)
+        self.set_hyperparam(BaseModel.KEY_EPOCHS, 75)
         self.set_hyperparam(BaseModel.KEY_BATCH_SIZE, 64)
         self.set_hyperparam(BaseModel.KEY_EMBEDDING_SIZE, 32)
         self.set_hyperparam(BaseModel.KEY_DEPOLARIZE, should_depolarize)
