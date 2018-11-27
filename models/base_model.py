@@ -1,10 +1,12 @@
+# type hints/annotation module
+from typing import List, Tuple, Union, Any
+
 import keras
 import numpy as np
+
 import data.data_util
 import models.parsing.tokenizer
 import models.storage.store
-# type annotation module
-from typing import List, Tuple, Union, Any
 
 
 class BaseModel:
@@ -53,6 +55,7 @@ class BaseModel:
             "num_words",
             "word_to_index",
             "index_to_word",
+            "last_train_history",
             "__hyperparams__"
         ]
         # setup the model
@@ -148,11 +151,11 @@ class BaseModel:
             "Call the method `update_train_and_test_data` " \
             "on this instance of %s" % self.__class__.__name__
         history = self.model.fit(
-            self.train_data,
-            self.train_labels,
-            epochs=self.get_hyperparam(BaseModel.KEY_EPOCHS),
-            batch_size=self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
-            validation_split=self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
+                self.train_data,
+                self.train_labels,
+                epochs=self.get_hyperparam(BaseModel.KEY_EPOCHS),
+                batch_size=self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
+                validation_split=self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
         )
         self.last_train_history = history
 
@@ -178,20 +181,20 @@ class BaseModel:
         the model's hyperparameters
         """
         models.storage.store.save_model(
-            self.model,
-            self.model_type_name,
-            self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE),
-            self.get_hyperparam(BaseModel.KEY_EPOCHS),
-            self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
-            self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
+                self.model,
+                self.model_type_name,
+                self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE),
+                self.get_hyperparam(BaseModel.KEY_EPOCHS),
+                self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
+                self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
         )
         models.storage.store.save_model_metadata(
-            self.get_model_metadata(),
-            self.model_type_name,
-            self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE),
-            self.get_hyperparam(BaseModel.KEY_EPOCHS),
-            self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
-            self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
+                self.get_model_metadata(),
+                self.model_type_name,
+                self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE),
+                self.get_hyperparam(BaseModel.KEY_EPOCHS),
+                self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
+                self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
         )
 
     def get_model_metadata(self) -> dict:
@@ -209,19 +212,20 @@ class BaseModel:
     def load(self) -> None:
         """ loads the model in place into self.model """
         model_path = models.storage.store.get_model_title(
-            self.model_type_name,
-            self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE),
-            self.get_hyperparam(BaseModel.KEY_EPOCHS),
-            self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
-            self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
+                self.model_type_name,
+                self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE),
+                self.get_hyperparam(BaseModel.KEY_EPOCHS),
+                self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
+                self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
         )
         print("loading model from %s" % model_path)
         self.model = keras.models.load_model(model_path)
         model_metadata = models.storage.store.load_model_metadata(model_path)
+        self._metadata_attributes = model_metadata["__attributes__"]
         self.set_model_metadata_attr(model_metadata)
 
     def set_model_metadata_attr(self, model_metadata: dict) -> None:
-        """ set hte model data attributes one by one """
+        """ set the model data attributes one by one """
         for attr in model_metadata["__attributes__"]:
             if attr == "__hyperparams__":
                 # handle __hyperparams__ differently
@@ -237,14 +241,24 @@ class BaseModel:
                 continue
             setattr(self, attr, model_metadata.get(attr, None))
 
-    def pad_sequences(self, sequences: List[List[int]], maxlen: int = None, padding: str = "post") -> np.ndarray:
-        if maxlen is None:
-            maxlen = self.max_sequence_length
+    def pad_sequences(
+            self,
+            sequences: List[List[int]],
+            maximum_sequence_len: int = None,
+            padding: str = "post") -> np.ndarray:
+        """
+        pad the sequences with pad characters. If the maximum_sequence_len
+        is not given, we use the default one that belongs to this class.
+        Otherwise, we use what is provided. This maximum_sequence_len parameter
+        is  necessary for RNN/LSTM models.
+        """
+        if maximum_sequence_len is None:
+            maximum_sequence_len = self.max_sequence_length
         return models.parsing.tokenizer.pad_data_sequences(
-            sequences,
-            self.word_to_index,
-            maxlen,
-            padding=padding
+                sequences,
+                self.word_to_index,
+                maximum_sequence_len,
+                padding=padding
         )
 
     # **********************************
@@ -276,9 +290,9 @@ class BaseModel:
     # ***************************************************
 
     def parse_base_data(
-        self,
-        sequences: List[List[int]],
-        labels: Tuple[Union[int, float], ...]) -> Tuple[np.ndarray, np.ndarray]:
+            self,
+            sequences: List[List[int]],
+            labels: Tuple[Union[int, float], ...]) -> Tuple[np.ndarray, np.ndarray]:
         """
         given all the texts and labels, convert them into
         numpy arrays of training data and labels.
