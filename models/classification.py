@@ -1,4 +1,7 @@
 """
+************************
+WE DO NOT USE THIS MODEL
+************************
 DEPRECATION NOTICE:
 This is deprecated. Use bucket_classification.py instead.
 """

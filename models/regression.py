@@ -1,3 +1,8 @@
+"""
+************************
+WE DO NOT USE THIS MODEL
+************************
+"""
 import data.data_util
 import models.parsing.tokenizer as text_tokenizer
 import models.storage.store as model_store
