@@ -157,7 +157,7 @@ class BaseModel:
                 batch_size=self.get_hyperparam(BaseModel.KEY_BATCH_SIZE),
                 validation_split=self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT),
         )
-        self.last_train_history = history
+        self.last_train_history = history.history
 
     def evaluate(self) -> Tuple[Any, Any]:
         """ evaluates the model and returns the metrics """
