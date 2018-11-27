@@ -122,14 +122,13 @@ class BucketClassification(BaseModel):
 
 
 if __name__ == '__main__':
-    label_index = -2
+    label_index = 0
     bc = BucketClassification(
             label_index,
-            buckets=BucketClassification.REACTION_INDEX_TO_OPTIMAL_BUCKET_COUNT.get(label_index, 24),
-            should_depolarize=False
+            should_depolarize=True
     )
-    bc.run(save=False)
-    # bc.load()
+    # bc.run(save=False)
+    bc.load()
     for t, total_expected in [
         ("Today is my birthday and no one remembered.", 63),
         ("The SHPE president is soooo dreamy. Is he single?", 20),
