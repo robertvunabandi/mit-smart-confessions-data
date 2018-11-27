@@ -25,14 +25,20 @@ class BucketClassification(BaseModel):
         data.data_util.FbReaction.ANGRY_INDEX: 16,
         data.data_util.FbReaction.COMMENTS_INDEX: 8,
     }
+    DEFAULT_BUCKET_COUNT = 15
 
-    def __init__(self, fb_reaction_index: int, buckets: int = 15, should_depolarize: bool = False):
+    def __init__(self, fb_reaction_index: int, buckets: int = None, should_depolarize: bool = False):
         """
         Creates a binary classifier that maps to the index given in
         fb_reaction_index. this binary classifier will classify
         everything greater than cutoff as 1 and everything below
         as 0.
         """
+        if buckets is None:
+            buckets = BucketClassification.REACTION_INDEX_TO_OPTIMAL_BUCKET_COUNT.get(
+                    fb_reaction_index,
+                    BucketClassification.DEFAULT_BUCKET_COUNT
+            )
         suffix = "%s_b%d" % ("all" if (fb_reaction_index == -1) else ("i%d" % fb_reaction_index), buckets)
         depol_suffix = "_depol" if should_depolarize else ""
         super(BucketClassification, self).__init__("bucket_classification_%s%s" % (suffix, depol_suffix))
