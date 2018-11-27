@@ -7,7 +7,7 @@ MIT Smart Confessions is a platform that uses machine learning to predict the nu
 
 The website for this application can be found [here](https://mit-smart-confessions.herokuapp.com), and the Github repository for the website can be found [here](https://github.com/robertvunabandi/mit-smart-confessions-website).
 
-[![MIT Smart Confession Logo](msc-logo.png)](https://mit-smart-confessions.herokuapp.com)
+[![MIT Smart Confession Logo](assets/msc-logo.png)](https://mit-smart-confessions.herokuapp.com)
 ## Installation
 
 ### Python Version: 3.6.x
