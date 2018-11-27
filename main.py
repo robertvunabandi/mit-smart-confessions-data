@@ -48,7 +48,7 @@ def get_classifier_model(index: int) -> BucketClassification:
     """
     if index in CLASSIFIER_MODELS:
         return CLASSIFIER_MODELS[index]
-    bc = BucketClassification(index)
+    bc = BucketClassification(index, should_depolarize=True)
     bc.load()
     CLASSIFIER_MODELS[index] = bc
     return CLASSIFIER_MODELS[index]
