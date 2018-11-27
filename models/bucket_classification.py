@@ -7,8 +7,26 @@ from typing import List, Tuple, Union
 
 
 class BucketClassification(BaseModel):
+    ALL_REACTIONS_INDEX = -2
+    ALL_REACTIONS_NO_COMMENTS_INDEX = -1
+    # the following count were found through guess and check. They yield a
+    # right balance of data points within the buckets, which is good for
+    # training so that it doesn't keep predicting the same thing. By right
+    # balance, I mean that not one of the buckets has most of the data
+    # (i.e. it's not polarized).
+    REACTION_INDEX_TO_OPTIMAL_BUCKET_COUNT = {
+        -2: 24,  # all reactions including comments
+        -1: 24,  # all reactions excluding comments
+        data.data_util.FbReaction.LIKE_INDEX: 32,
+        data.data_util.FbReaction.LOVE_INDEX: 13,
+        data.data_util.FbReaction.WOW_INDEX: 8,
+        data.data_util.FbReaction.HAHA_INDEX: 10,
+        data.data_util.FbReaction.SAD_INDEX: 13,
+        data.data_util.FbReaction.ANGRY_INDEX: 16,
+        data.data_util.FbReaction.COMMENTS_INDEX: 8,
+    }
 
-    def __init__(self, fb_reaction_index: int, buckets: int = 25, should_depolarize: bool = False):
+    def __init__(self, fb_reaction_index: int, buckets: int = 15, should_depolarize: bool = False):
         """
         Creates a binary classifier that maps to the index given in
         fb_reaction_index. this binary classifier will classify
@@ -32,30 +50,39 @@ class BucketClassification(BaseModel):
     def parse_base_data(
             self,
             sequences: List[List[int]],
-            labels: List[Union[int, float]]) -> Tuple[np.ndarray, np.ndarray]:
-
-        if self.fb_reaction_index != -1:
-            index_labels = [label[self.fb_reaction_index] for label in labels]
-        else:
+            labels: List[Tuple[Union[int, float], ...]]) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        we maybe depolarize the data here because it can be very polarized.
+        """
+        if self.fb_reaction_index == -1:
             index_labels = [sum(label[:-1]) for label in labels]
-        depol_label_with_indices = data.data_util.depolarize_data(index_labels)
-        should_depolarize = self.get_hyperparam(BaseModel.KEY_DEPOLARIZE)
-        depol_sequences = [sequences[index] for index, _ in depol_label_with_indices] \
-            if should_depolarize \
-            else sequences
-        depol_labels = [index_labels[index] for index, _ in depol_label_with_indices] \
-            if should_depolarize \
-            else index_labels
+        elif self.fb_reaction_index == -2:
+            index_labels = [sum(label) for label in labels]
+        else:
+            index_labels = [label[self.fb_reaction_index] for label in labels]
+        depol_sequences, depol_labels = BucketClassification.get_depolarized_data(
+                sequences,
+                index_labels,
+                should_depolarize=self.get_hyperparam(BaseModel.KEY_DEPOLARIZE),
+        )
+        out = data.data_util.bucketize_labels(depol_labels, self.buckets)
+        new_labels, self.bucket_ranges, b_frequencies = out
+        freq_s = data.data_util.stringify_bucket_frequencies(b_frequencies)
+        print("parse_base_data::Bucket Frequencies::\n\n%s" % freq_s)
         padded = self.pad_sequences(depol_sequences)
-        new_labels, self.bucket_ranges, b_frequencies = data.data_util.bucketize_labels(
-                depol_labels,
-                self.buckets
-        )
-        print(
-                "parse_base_data::Bucket Frequencies::\n\n"
-                "%s" % data.data_util.stringify_bucket_frequencies(b_frequencies)
-        )
         return padded, np.array(new_labels)
+
+    @staticmethod
+    def get_depolarized_data(
+            sequences: List[List[int]],
+            labels: List[Union[int, float]],
+            should_depolarize: bool) -> Tuple[List[List[int]], List[Union[int, float]]]:
+        if not should_depolarize:
+            return sequences, labels
+        depol_label_with_indices = data.data_util.depolarize_data(labels)
+        depol_sequences = [sequences[index] for index, _ in depol_label_with_indices]
+        depol_labels = [labels[index] for index, _ in depol_label_with_indices]
+        return depol_sequences, depol_labels
 
     def create(self) -> None:
         embedding_size = self.get_hyperparam(BaseModel.KEY_EMBEDDING_SIZE)
@@ -74,24 +101,18 @@ class BucketClassification(BaseModel):
 
 
 if __name__ == '__main__':
-    bc = BucketClassification(data.data_util.FbReaction.LOVE_INDEX, buckets=25, should_depolarize=True)
+    label_index = -2
+    bc = BucketClassification(
+            label_index,
+            buckets=BucketClassification.REACTION_INDEX_TO_OPTIMAL_BUCKET_COUNT.get(label_index, 24),
+            should_depolarize=False
+    )
     bc.run(save=False)
     # bc.load()
     for t, total_expected in [
         ("Today is my birthday and no one remembered.", 63),
-        (
-        "AAAAAAHHHHHHH I LOVE MY SO SO FREAKIN MUCH HE IS LITERALLY THE BEST WOW I NEED TO APPRECIATE HIM MORE AND BE NICER BC HE DESERVES ONLY THE VERY BEST!!!!!",
-        13),
         ("The SHPE president is soooo dreamy. Is he single?", 20),
-        (
-        "to the girl in the gym the other eve that got really excited and ran over to the window and waved at one of the guys on the pool deck, that was super duper cute and i support yall",
-        4),
         ("I have someone back home and here. I'm in love with both of them", 7),
-        ("Mohammed Nasir and Ji Min Lee are the best most wholesome confessions commenters change my mind",
-         19),
-        (
-        "I bet all the people who said “go vote!” before the midterm elections would regret encouraging me when they found out I voted republican.",
-        46),
         ("where did daniel's hair go?!", 1),
         ("What if MIT Confessions is run by the GOD Eric Lander himself?? Function. Gene. Protein.", 55),
         ("Raise your hand if you've ever felt personally victimized by Ben Bitdiddle", 139),
@@ -105,22 +126,3 @@ if __name__ == '__main__':
         print(t)
         print(probs, bucket, "(total expected %d)" % total_expected)
         print()
-    # without depolarizing: loss: 0.0022 - acc: 0.9988 - val_loss: 0.1666 - val_acc: 0.9736
-    # (-1.000, 0.000): 2784
-    # (0.000, 1.000): 424
-    # (1.000, 2.000): 205
-    # (2.000, 4.000): 197
-    # (4.000, 8.000): 164
-    # (8.000, 46.000): 144
-    # with depolarizing: loss: 0.0071 - acc: 0.9964 - val_loss: 0.0877 - val_acc: 0.9778
-    # (-1.000, 0.000): 815
-    # (0.000, 1.000): 507
-    # (1.000, 2.000): 233
-    # (2.000, 3.000): 267
-    # (3.000, 4.000): 191
-    # (4.000, 5.000): 173
-    # (5.000, 7.000): 205
-    # (7.000, 10.000): 152
-    # (10.000, 13.000): 138
-    # (13.000, 21.000): 124
-    # (21.000, 46.000): 60
