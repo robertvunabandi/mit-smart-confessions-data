@@ -25,7 +25,7 @@ from models.lstm_generator import LSTMGenerator
 # on.
 CLASSIFIER_MODELS = {}
 LSTM_MODELS = {}
-HOST = os.getenv("APP_HOST", "0.0.0.0")
+HOST = os.getenv("APP_HOST", "localhost")
 PORT = os.getenv("APP_PORT", 5000)
 
 ########
