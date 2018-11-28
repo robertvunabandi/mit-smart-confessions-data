@@ -7,6 +7,7 @@ FLASK_APP=main.py flask run --host={some-host} --port={some-port}
 """
 import os
 from flask import Flask, request
+import json
 
 import utils
 import constants
@@ -25,7 +26,7 @@ from models.lstm_generator import LSTMGenerator
 # on.
 CLASSIFIER_MODELS = {}
 LSTM_MODELS = {}
-HOST = os.getenv("HOST", "0.0.0.0.")
+HOST = os.getenv("HOST", "0.0.0.0")
 PORT = os.getenv("HOST", 5000)
 
 ########
@@ -57,8 +58,6 @@ def get_classifier_model(index: int) -> BucketClassification:
 @app.route("/predict", methods=["GET"])
 def classify():
     text = request.args.get("text")
-    # if len(text.split(" ")) > 0:
-    #     text = '"%s"' % text
     result = {}
     # for each index, make a prediction
     for index, reaction in enumerate(constants.FB_REACTIONS):
@@ -90,8 +89,6 @@ def generate():
     return lstm_model.generate(seed, length)
 
 
-# todo - hey Jurgen, could you add some comments about the __package__ is None check?
-# todo - will need to not specify the host and port so that it runs in server
 if __name__ == "__main__" and __package__ is None:
     app.run(
             host=HOST,
