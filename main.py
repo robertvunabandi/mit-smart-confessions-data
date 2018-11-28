@@ -7,7 +7,6 @@ FLASK_APP=main.py flask run --host={some-host} --port={some-port}
 """
 import os
 from flask import Flask, request
-import json
 
 import utils
 import constants
