@@ -235,7 +235,7 @@ class BaseModel:
                 continue
             if attr == "index_to_word":
                 self.index_to_word = {
-                    self.index_to_word[int(index)]: word
+                    int(index): word
                     for index, word in model_metadata.get(attr, {}).items()
                 }
                 continue

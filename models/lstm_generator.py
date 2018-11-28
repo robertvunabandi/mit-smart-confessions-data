@@ -106,8 +106,8 @@ class LSTMGenerator(BaseModel):
 
 if __name__ == "__main__":
     generator = LSTMGenerator(popularity_threshold=40)
-    generator.run(save=True)
-    # generator.load()
+    # generator.run(save=False)
+    generator.load()
     examples = [("Anime girls are better than real girls who is with us anime lovers", 20)]
     for seed_text_, word_additions in examples:
         print(generator.generate(seed_text_, word_additions))
