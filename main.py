@@ -48,7 +48,7 @@ def get_classifier_model(index: int) -> BucketClassification:
     """
     if index in CLASSIFIER_MODELS:
         return CLASSIFIER_MODELS[index]
-    bc = BucketClassification(index, should_depolarize=True)
+    bc = BucketClassification(index, should_depolarize=False)
     bc.load()
     CLASSIFIER_MODELS[index] = bc
     return CLASSIFIER_MODELS[index]
@@ -72,10 +72,10 @@ def classify():
 
 
 def get_lstm_model():
-    if 0 not in LSTM_MODELS:
-        LSTM_MODELS[0] = LSTMGenerator(popularity_threshold=40)
-        LSTM_MODELS[0].load()
+    if 0 in LSTM_MODELS:
         return LSTM_MODELS[0]
+    LSTM_MODELS[0] = LSTMGenerator(popularity_threshold=40)
+    LSTM_MODELS[0].load()
     return LSTM_MODELS[0]
 
 

@@ -84,5 +84,5 @@ def _get_model_suffix(
 	es = str(embedding_size).rjust(3, "0")
 	ep = str(epochs).rjust(4, "0")
 	bs = str(batch_size).rjust(3, "0")
-	vs = str(round(validation_split, 3)).ljust(5, "0")
+	vs = str(round(validation_split, 3)).ljust(5, "0").replace(".", "-")
 	return "%s_%s_%s_%s" % (es, ep, bs, vs)
