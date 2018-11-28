@@ -161,6 +161,10 @@ class BaseModel:
 
     def evaluate(self) -> Tuple[Any, Any]:
         """ evaluates the model and returns the metrics """
+        # don't evaluate if we set the validation split to 0.
+        val_split = self.get_hyperparam(BaseModel.KEY_VALIDATION_SPLIT)
+        if val_split == 0.0:
+            return None, None
         assert self.test_data is not None, \
             "test_data is None. The model may not have been trained. " \
             "Call the method `update_train_and_test_data` " \
