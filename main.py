@@ -25,8 +25,8 @@ from models.lstm_generator import LSTMGenerator
 # on.
 CLASSIFIER_MODELS = {}
 LSTM_MODELS = {}
-HOST = os.getenv("HOST", "0.0.0.0")
-PORT = os.getenv("HOST", 5000)
+HOST = os.getenv("APP_HOST", "0.0.0.0")
+PORT = os.getenv("APP_PORT", 5000)
 
 ########
 # CODE #
@@ -88,10 +88,10 @@ def generate():
     return lstm_model.generate(seed, length)
 
 
-if __name__ == "__main__" and __package__ is None:
+if __name__ == "__main__":
     app.run(
             host=HOST,
-            debug=True,  # automatic reloading enabled
+            debug=False,  # automatic reloading enabled
             threaded=False,
             port=PORT,
     )
