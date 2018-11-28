@@ -84,7 +84,7 @@ def get_lstm_model():
 def generate():
     # todo - should store the model inside LSTM_MODELS
     seed = request.args.get("seed")
-    length = int(request.args.get("length"))  # todo: actually check whether this is an integer
+    length = int(request.args.get("length", 20))  # todo: actually check whether this is an integer
     lstm_model = get_lstm_model()
     return lstm_model.generate(seed, length)
 
