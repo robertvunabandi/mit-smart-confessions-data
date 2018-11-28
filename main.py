@@ -12,7 +12,7 @@ import utils
 import constants
 
 from models.bucket_classification import BucketClassification
-import legacy_lstm_model
+from models.lstm_generator import LSTMGenerator
 
 
 ###########
@@ -24,7 +24,7 @@ import legacy_lstm_model
 # cache the model into these variables to use them later
 # on.
 CLASSIFIER_MODELS = {}
-LSTM_MODEL = None
+LSTM_MODELS = {}
 HOST = os.getenv("HOST", "0.0.0.0.")
 PORT = os.getenv("HOST", 5000)
 
@@ -74,10 +74,11 @@ def classify():
 
 
 def get_lstm_model():
-    if LSTM_MODEL is None:
-        # todo - set LSTM_MODEL to load the model
-        pass
-    return LSTM_MODEL
+    if 0 not in LSTM_MODELS:
+        LSTM_MODELS[0] = LSTMGenerator(popularity_threshold=40)
+        LSTM_MODELS[0].load()
+        return LSTM_MODELS[0]
+    return LSTM_MODELS[0]
 
 
 @app.route("/generate", methods=["GET"])
@@ -85,8 +86,8 @@ def generate():
     # todo - should store the model inside LSTM_MODELS
     seed = request.args.get("seed")
     length = int(request.args.get("length"))  # todo: actually check whether this is an integer
-    output = legacy_lstm_model.generate_from_stored_model(seed, length)
-    return output
+    lstm_model = get_lstm_model()
+    return lstm_model.generate(seed, length)
 
 
 # todo - hey Jurgen, could you add some comments about the __package__ is None check?
