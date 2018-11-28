@@ -72,6 +72,10 @@ def classify():
 
 
 def get_lstm_model():
+    # CHECK OUT THIS LINK FOR bug:
+    # https://github.com/jaungiers/Multidimensional-LSTM-BitCoin-Time-Series/issues/1
+    # Might be able to move to Microsoft Azure:
+    # https://azure.microsoft.com/en-us/develop/python/
     if 0 in LSTM_MODELS:
         return LSTM_MODELS[0]
     LSTM_MODELS[0] = LSTMGenerator(popularity_threshold=40)
@@ -88,6 +92,7 @@ def generate():
     return lstm_model.generate(seed, length)
 
 
+print(os.system("python3 --version"))
 if __name__ == "__main__":
     app.run(
             host=HOST,
