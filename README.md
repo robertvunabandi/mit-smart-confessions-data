@@ -1,6 +1,5 @@
 # MIT Smart Confessions API
 
-
 [MIT confessions](https://www.facebook.com/beaverconfessions) is a Facebook page where MIT students posts anonymously and get reactions from other MIT students. These posts are called "confessions". 
 
 MIT Smart Confessions is a platform that uses machine learning to predict the number of reactions one would get from their confession and to generate confessions in such a way that it maximizes the number of reactions that confession would get.
