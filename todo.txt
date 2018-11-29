@@ -1,3 +1,4 @@
+- change the repo name to be "mit-smart-confessions-api"
 - make logo smaller.
 - Move unused models into a "legacy" or "unused" folder within /models
 - Collect more data from: mit confessions (more confessions have been posted), mit timely confessions, mit summer confessions.
