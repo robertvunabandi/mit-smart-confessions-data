@@ -92,11 +92,15 @@ def generate():
     return lstm_model.generate(seed, length)
 
 
-print(os.system("python3 --version"))
 if __name__ == "__main__":
     app.run(
             host=HOST,
             debug=False,  # automatic reloading enabled
-            threaded=False,
+            # with #!/usr/bin/python3
+            # turning threaded off makes predict work, turning on makes generate work
+            # without #!/usr/bin/python3
+            # turning threaded off makes generate work, turning on makes predict work
+            # wtf?
+            threaded=True,
             port=PORT,
     )
