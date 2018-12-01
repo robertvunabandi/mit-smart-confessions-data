@@ -1,4 +1,9 @@
 - change the repo name to be "mit-smart-confessions-api"
-- make logo smaller.
+- make logo smaller in README
 - Move unused models into a "legacy" or "unused" folder within /models
 - Collect more data from: mit confessions (more confessions have been posted), mit timely confessions, mit summer confessions.
+- attempt an LSTM for the bucket classification and maybe regression
+
+
+- Post on confessions:
+    "roast that 6 check mit midterms harder than international olympiads of course" - Generated with MIT Smart Confessions.
