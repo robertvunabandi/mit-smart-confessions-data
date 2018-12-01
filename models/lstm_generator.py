@@ -21,7 +21,7 @@ class LSTMGenerator(BaseModel):
         super(LSTMGenerator, self).__init__("lstm_generator%s" % suffix)
         self.popularity_threshold = popularity_threshold
         self.register_metadata("popularity_threshold")
-        self.set_hyperparam(BaseModel.KEY_EPOCHS, 100)  # ~10m/epoch => ~16.67hrs
+        self.set_hyperparam(BaseModel.KEY_EPOCHS, 250)  # ~10m/epoch
         self.set_hyperparam(BaseModel.KEY_BATCH_SIZE, 32)
         self.set_hyperparam(BaseModel.KEY_EMBEDDING_SIZE, 300)
         self.set_hyperparam(BaseModel.KEY_TEST_SPLIT, 0.0)
