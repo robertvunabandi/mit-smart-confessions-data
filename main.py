@@ -113,7 +113,7 @@ def error_not_found(error):
 
 
 @app.errorhandler(500)
-def error_not_found(error):
+def error_internal(error):
     return "Internal Server Error - %s" % str(error), 500
 
 
@@ -132,6 +132,8 @@ def preload_models():
 preload_models()
 
 if __name__ == "__main__":
+    app.register_error_handler(404, error_not_found)
+    app.register_error_handler(500, error_internal)
     app.run(
             host=HOST,
             debug=False,  # automatic reloading enabled
