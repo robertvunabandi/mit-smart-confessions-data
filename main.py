@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 run with:
 FLASK_APP=main.py flask run
@@ -7,10 +8,10 @@ FLASK_APP=main.py flask run --host={some-host} --port={some-port}
 """
 import os
 from flask import Flask, request
+import tensorflow as tf
 
 import utils
 import constants
-
 from models.bucket_classification import BucketClassification
 from models.lstm_generator import LSTMGenerator
 
@@ -25,12 +26,13 @@ from models.lstm_generator import LSTMGenerator
 # on.
 CLASSIFIER_MODELS = {}
 LSTM_MODELS = {}
+TF_GRAPH = {}
 HOST = os.getenv("HOST", "localhost")
 PORT = os.getenv("PORT", 5000)
 
-########
-# CODE #
-########
+#########################
+# Route for Predictions #
+#########################
 
 app = Flask(__name__)
 
@@ -62,12 +64,13 @@ def classify():
     for index, reaction in enumerate(constants.FB_REACTIONS):
         bc = get_classifier_model(index)
         d = bc.convert_text_to_padded_sequence(text)
-        prediction = bc.predict(d).tolist()[0]
-        result[reaction.lower()] = []
-        for zipped in zip(bc.bucket_ranges, prediction):
-            ranges, prob = zipped
-            min_v, max_v = ranges
-            result[reaction.lower()].append([min_v, max_v, prob])
+        with TF_GRAPH[0].as_default():
+            prediction = bc.predict(d).tolist()[0]
+            result[reaction.lower()] = []
+            for zipped in zip(bc.bucket_ranges, prediction):
+                ranges, prob = zipped
+                min_v, max_v = ranges
+                result[reaction.lower()].append([min_v, max_v, prob])
     return utils.make_string_json_valid(str(result))
 
 
@@ -89,8 +92,37 @@ def generate():
     seed = request.args.get("seed")
     length = int(request.args.get("length", 20))  # todo: actually check whether this is an integer
     lstm_model = get_lstm_model()
-    return lstm_model.generate(seed, length)
+    with TF_GRAPH[0].as_default():
+        return lstm_model.generate(seed, length)
 
+
+##################
+# Error Handling #
+##################
+
+@app.errorhandler(404)
+def error_not_found(error):
+    return "Not found: %s" % str(error), 404
+
+
+@app.errorhandler(500)
+def error_not_found(error):
+    return "Internal Server Error - %s" % str(error), 404
+
+
+####################
+# Model Preloading #
+####################
+
+def preload_models():
+    get_lstm_model()
+    for index in range(len(constants.FB_REACTIONS)):
+        get_classifier_model(index)
+    TF_GRAPH[0] = tf.get_default_graph()
+
+
+# preload the models
+preload_models()
 
 if __name__ == "__main__":
     app.run(
