@@ -26,6 +26,15 @@ from models.lstm_generator import LSTMGenerator
 # on.
 CLASSIFIER_MODELS = {}
 LSTM_MODELS = {}
+DEFAULT_GENERATE_LENGTH = 20
+# using the tf graph solves the problem that we were having
+# about the lstm working or not working (vice versa with the
+# classifier). I still am not sure why this fixes it, but it
+# seems like a problem due to asynchronous-ness or the way
+# threading works when using flask. In addition, it could be
+# a problem with the python version. Not sure but this fixes
+# it with calling "with tf_graph.as_default():" then predicting
+# within that scope.
 TF_GRAPH = {}
 HOST = os.getenv("HOST", "localhost")
 PORT = os.getenv("PORT", 5000)
@@ -75,10 +84,6 @@ def classify():
 
 
 def get_lstm_model():
-    # CHECK OUT THIS LINK FOR bug:
-    # https://github.com/jaungiers/Multidimensional-LSTM-BitCoin-Time-Series/issues/1
-    # Might be able to move to Microsoft Azure:
-    # https://azure.microsoft.com/en-us/develop/python/
     if 0 in LSTM_MODELS:
         return LSTM_MODELS[0]
     LSTM_MODELS[0] = LSTMGenerator(popularity_threshold=40)
@@ -88,9 +93,11 @@ def get_lstm_model():
 
 @app.route("/generate", methods=["GET"])
 def generate():
-    # todo - should store the model inside LSTM_MODELS
     seed = request.args.get("seed")
-    length = int(request.args.get("length", 20))  # todo: actually check whether this is an integer
+    try:
+        length = int(request.args.get("length", DEFAULT_GENERATE_LENGTH))
+    except Exception:
+        length = DEFAULT_GENERATE_LENGTH
     lstm_model = get_lstm_model()
     with TF_GRAPH[0].as_default():
         return lstm_model.generate(seed, length)
@@ -107,7 +114,7 @@ def error_not_found(error):
 
 @app.errorhandler(500)
 def error_not_found(error):
-    return "Internal Server Error - %s" % str(error), 404
+    return "Internal Server Error - %s" % str(error), 500
 
 
 ####################
@@ -128,11 +135,6 @@ if __name__ == "__main__":
     app.run(
             host=HOST,
             debug=False,  # automatic reloading enabled
-            # with #!/usr/bin/python3
-            # turning threaded off makes predict work, turning on makes generate work
-            # without #!/usr/bin/python3
-            # turning threaded off makes generate work, turning on makes predict work
-            # wtf?
             threaded=True,
             port=PORT,
     )
